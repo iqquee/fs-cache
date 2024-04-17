@@ -9,7 +9,8 @@ var (
 	errKeyNotFound = errors.New("key was not found")
 )
 
-func (ch Cache) Set(key string, value interface{}, duration ...time.Time) error {
+// Set()
+func (ch *Cache) Set(key string, value interface{}, duration ...time.Time) error {
 	fs := make(map[string]interface{})
 	fs[key] = value
 	ch.Fscache = append(ch.Fscache, fs)
@@ -17,7 +18,8 @@ func (ch Cache) Set(key string, value interface{}, duration ...time.Time) error 
 	return nil
 }
 
-func (ch Cache) Get(key string) (interface{}, error) {
+// Get()
+func (ch *Cache) Get(key string) (interface{}, error) {
 	for _, cache := range ch.Fscache {
 		if val, ok := cache[key]; ok {
 			return val, nil
@@ -27,7 +29,7 @@ func (ch Cache) Get(key string) (interface{}, error) {
 	return "", errKeyNotFound
 }
 
-func (ch Cache) Del(key string) error {
+func (ch *Cache) Del(key string) error {
 	for index, cache := range ch.Fscache {
 		if _, ok := cache[key]; ok {
 			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
@@ -37,6 +39,14 @@ func (ch Cache) Del(key string) error {
 
 	return errKeyNotFound
 }
-func (ch Cache) Clear() error
-func (ch Cache) Size() int
+func (ch *Cache) Clear() error {
+	ch.Fscache = ch.Fscache[:0]
+
+	return nil
+}
+
+func (ch Cache) Size() int {
+	return len(ch.Fscache)
+}
+
 func (ch Cache) MemSize() int
