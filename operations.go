@@ -49,4 +49,4 @@ func (ch Cache) Size() int {
 	return len(ch.Fscache)
 }
 
-func (ch Cache) MemSize()
+func (ch Cache) MemSize() int
