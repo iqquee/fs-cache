@@ -1,6 +1,7 @@
 package fscache
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type (
 
 	cacheData struct {
 		value    interface{}
-		duration time.Duration
+		duration time.Time
 	}
 
 	Cache struct {
@@ -35,10 +36,29 @@ func New() Operations {
 	ch := Cache{Fscache: fs}
 
 	go func() {
-
+		tt := time.Now()
+		for i, v := range ch.Fscache {
+			cache := v["duration"]
+			if tt.Before(cache.duration) {
+				if err := ch.delIndex(i); err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
 	}()
 
 	op := Operations(&ch)
 
 	return op
+}
+
+func (ch *Cache) delIndex(index int) error {
+	for i := range ch.Fscache {
+		if index == i {
+			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+			return nil
+		}
+	}
+
+	return errKeyNotFound
 }
