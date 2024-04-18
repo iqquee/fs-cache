@@ -6,13 +6,32 @@ import (
 )
 
 var (
-	errKeyNotFound = errors.New("key was not found")
+	errKeyNotFound = errors.New("key not found")
+	errKeyExists   = errors.New("key already exist")
 )
 
 // Set()
-func (ch *Cache) Set(key string, value interface{}, duration ...time.Time) error {
-	fs := make(map[string]interface{})
-	fs[key] = value
+func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) error {
+	for _, cache := range ch.Fscache {
+		if _, ok := cache[key]; ok {
+			return errKeyExists
+		}
+	}
+
+	var ttl time.Duration
+	for i, v := range duration {
+		if i == 0 {
+			ttl = v
+			break
+		}
+	}
+
+	fs := make(map[string]cacheData)
+	fs[key] = cacheData{
+		value:    value,
+		duration: ttl,
+	}
+
 	ch.Fscache = append(ch.Fscache, fs)
 
 	return nil
@@ -22,11 +41,11 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Time) error
 func (ch *Cache) Get(key string) (interface{}, error) {
 	for _, cache := range ch.Fscache {
 		if val, ok := cache[key]; ok {
-			return val, nil
+			return val.value, nil
 		}
 	}
 
-	return "", errKeyNotFound
+	return nil, errKeyNotFound
 }
 
 func (ch *Cache) Del(key string) error {
@@ -45,8 +64,8 @@ func (ch *Cache) Clear() error {
 	return nil
 }
 
-func (ch Cache) Size() int {
+func (ch *Cache) Size() int {
 	return len(ch.Fscache)
 }
 
-func (ch Cache) MemSize() int
+// func (ch *Cache) MemSize() int
