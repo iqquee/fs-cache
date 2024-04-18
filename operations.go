@@ -29,7 +29,7 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 	fs := make(map[string]cacheData)
 	fs[key] = cacheData{
 		value:    value,
-		duration: ttl,
+		duration: time.Now().Add(ttl),
 	}
 
 	ch.Fscache = append(ch.Fscache, fs)
@@ -58,6 +58,7 @@ func (ch *Cache) Del(key string) error {
 
 	return errKeyNotFound
 }
+
 func (ch *Cache) Clear() error {
 	ch.Fscache = ch.Fscache[:0]
 
