@@ -9,6 +9,8 @@ import (
 
 func main() {
 	fs := fscache.New()
+	fs.Debug()
+
 	if err := fs.Set("1", "user1", 5*time.Minute); err != nil {
 		fmt.Println("set:", err)
 	}

@@ -19,11 +19,18 @@ type (
 
 	// Operations lists all available operations on the fscache
 	Operations interface {
+		// Set() adds a new data into the in-memmory storage
 		Set(key string, value interface{}, duration ...time.Duration) error
+		// Get() retrieves a data from the in-memmory storage
 		Get(key string) (interface{}, error)
+		// Del() deletes a data from the in-memmory storage
 		Del(key string) error
+		// Clear() deletes all datas from the in-memmory storage
 		Clear() error
+		// Size() retrieves the total data objects in the in-memmory storage
 		Size() int
+		// Debug() enables debug to get certain logs
+		Debug()
 	}
 )
 
@@ -36,14 +43,14 @@ func New() Operations {
 	go func() {
 		tt := time.Now()
 		for i, v := range ch.Fscache {
-			if Debug {
+			if debug {
 				fmt.Println("go routine running...")
 			}
 
 			cache := v["duration"]
 			if tt.Before(cache.duration) {
 				if err := ch.delIndex(i); err != nil {
-					if Debug {
+					if debug {
 						fmt.Printf("[error deleting after Expire ::: %v]", err)
 					}
 				}
