@@ -6,8 +6,6 @@ import (
 )
 
 type (
-	Debug bool
-
 	// cacheData object
 	cacheData struct {
 		value    interface{}
@@ -41,7 +39,7 @@ func New() Operations {
 			cache := v["duration"]
 			if tt.Before(cache.duration) {
 				if err := ch.delIndex(i); err != nil {
-					fmt.Printf("error deleting after Expire: %v", err)
+					fmt.Printf("[error deleting after Expire ::: %v]", err)
 				}
 			}
 		}
