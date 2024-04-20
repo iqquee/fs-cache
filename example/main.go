@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	fscache "github.com/iqquee/fs-cache"
 )
 
 func main() {
 	fs := fscache.New()
-	if err := fs.Set("1", "user1", 10*5); err != nil {
+	if err := fs.Set("1", "user1", 5*time.Minute); err != nil {
 		fmt.Println("set:", err)
 	}
 

@@ -6,8 +6,10 @@ import (
 )
 
 var (
+	// errKeyNotFound key not found
 	errKeyNotFound = errors.New("key not found")
-	errKeyExists   = errors.New("key already exist")
+	// errKeyExists key already exists
+	errKeyExists = errors.New("key already exist")
 )
 
 // Set() adds a new data into the in-memmory storage
