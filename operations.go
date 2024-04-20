@@ -10,7 +10,7 @@ var (
 	errKeyExists   = errors.New("key already exist")
 )
 
-// Set()
+// Set() adds a new data into the in-memmory storage
 func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) error {
 	for _, cache := range ch.Fscache {
 		if _, ok := cache[key]; ok {
@@ -37,7 +37,7 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 	return nil
 }
 
-// Get()
+// Get() retrieves a data from the in-memmory storage
 func (ch *Cache) Get(key string) (interface{}, error) {
 	for _, cache := range ch.Fscache {
 		if val, ok := cache[key]; ok {
@@ -48,6 +48,7 @@ func (ch *Cache) Get(key string) (interface{}, error) {
 	return nil, errKeyNotFound
 }
 
+// Del() deletes a data from the in-memmory storage
 func (ch *Cache) Del(key string) error {
 	for index, cache := range ch.Fscache {
 		if _, ok := cache[key]; ok {
@@ -59,14 +60,14 @@ func (ch *Cache) Del(key string) error {
 	return errKeyNotFound
 }
 
+// Clear() deletes all datas from the in-memmory storage
 func (ch *Cache) Clear() error {
 	ch.Fscache = ch.Fscache[:0]
 
 	return nil
 }
 
+// Size() retrieves the total data objects in the in-memmory storage
 func (ch *Cache) Size() int {
 	return len(ch.Fscache)
 }
-
-// func (ch *Cache) MemSize() int

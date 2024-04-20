@@ -6,15 +6,15 @@ import (
 )
 
 type (
-	// Store is the in-memory storage cache
-	// Fscache []map[string]interface{}
 	Debug bool
 
+	// cacheData object
 	cacheData struct {
 		value    interface{}
 		duration time.Time
 	}
 
+	// Cache object instance
 	Cache struct {
 		Fscache []map[string]cacheData
 	}
@@ -26,7 +26,6 @@ type (
 		Del(key string) error
 		Clear() error
 		Size() int
-		// MemSize() int
 	}
 )
 
@@ -35,13 +34,14 @@ func New() Operations {
 	var fs []map[string]cacheData
 	ch := Cache{Fscache: fs}
 
+	// run go routine to check if the duration has expired and then delete it from off the array
 	go func() {
 		tt := time.Now()
 		for i, v := range ch.Fscache {
 			cache := v["duration"]
 			if tt.Before(cache.duration) {
 				if err := ch.delIndex(i); err != nil {
-					fmt.Println(err)
+					fmt.Printf("error deleting after Expire: %v", err)
 				}
 			}
 		}
@@ -52,6 +52,7 @@ func New() Operations {
 	return op
 }
 
+// delIndex is used internally to delete a set object by its index
 func (ch *Cache) delIndex(index int) error {
 	for i := range ch.Fscache {
 		if index == i {
