@@ -1,7 +1,6 @@
 package fscache
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -14,6 +13,9 @@ type (
 
 	// Cache object instance
 	Cache struct {
+		// debug enables debugging
+		debug bool
+		// Fscache is an [] that the datas are saved into
 		Fscache []map[string]cacheData
 	}
 
@@ -37,40 +39,10 @@ type (
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
 	var fs []map[string]cacheData
-	ch := Cache{Fscache: fs}
-
-	// run go routine to check if the duration has expired and then delete it from off the array
-	go func() {
-		tt := time.Now()
-		for i, v := range ch.Fscache {
-			if debug {
-				fmt.Println("go routine running...")
-			}
-
-			cache := v["duration"]
-			if tt.Before(cache.duration) {
-				if err := ch.delIndex(i); err != nil {
-					if debug {
-						fmt.Printf("[error deleting after Expire ::: %v]", err)
-					}
-				}
-			}
-		}
-	}()
-
-	op := Operations(&ch)
-
-	return op
-}
-
-// delIndex is used internally to delete a set object by its index
-func (ch *Cache) delIndex(index int) error {
-	for i := range ch.Fscache {
-		if index == i {
-			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
-			return nil
-		}
+	ch := Cache{
+		Fscache: fs,
 	}
 
-	return errKeyNotFound
+	op := Operations(&ch)
+	return op
 }

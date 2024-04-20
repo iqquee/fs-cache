@@ -6,8 +6,6 @@ import (
 )
 
 var (
-	// debug enables debugging
-	debug bool
 	// errKeyNotFound key not found
 	errKeyNotFound = errors.New("key not found")
 	// errKeyExists key already exists
@@ -78,5 +76,5 @@ func (ch *Cache) Size() int {
 
 // Debug() enables debug to get certain logs
 func (ch *Cache) Debug() {
-	debug = true
+	ch.debug = true
 }
