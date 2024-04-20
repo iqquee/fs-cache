@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	Debug bool
+	// debug enables debugging
+	debug bool
 	// errKeyNotFound key not found
 	errKeyNotFound = errors.New("key not found")
 	// errKeyExists key already exists
@@ -73,4 +74,9 @@ func (ch *Cache) Clear() error {
 // Size() retrieves the total data objects in the in-memmory storage
 func (ch *Cache) Size() int {
 	return len(ch.Fscache)
+}
+
+// Debug() enables debug to get certain logs
+func (ch *Cache) Debug() {
+	debug = true
 }
