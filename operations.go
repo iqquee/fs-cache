@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	Debug bool
 	// errKeyNotFound key not found
 	errKeyNotFound = errors.New("key not found")
 	// errKeyExists key already exists

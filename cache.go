@@ -36,10 +36,16 @@ func New() Operations {
 	go func() {
 		tt := time.Now()
 		for i, v := range ch.Fscache {
+			if Debug {
+				fmt.Println("go routine running...")
+			}
+
 			cache := v["duration"]
 			if tt.Before(cache.duration) {
 				if err := ch.delIndex(i); err != nil {
-					fmt.Printf("[error deleting after Expire ::: %v]", err)
+					if Debug {
+						fmt.Printf("[error deleting after Expire ::: %v]", err)
+					}
 				}
 			}
 		}
