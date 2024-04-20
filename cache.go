@@ -14,7 +14,8 @@ type (
 	// Cache object instance
 	Cache struct {
 		// debug enables debugging
-		debug   bool
+		debug bool
+		// Fscache is an [] that the datas are saved into
 		Fscache []map[string]cacheData
 	}
 
