@@ -38,6 +38,8 @@ type (
 		Debug()
 		// OverWrite updates an already set value using it key
 		OverWrite(key string, value interface{}, duration ...time.Duration) error
+		// OverWriteWithKey updates an already set value and key using the previously set key
+		OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error
 	}
 )
 
