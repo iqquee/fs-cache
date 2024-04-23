@@ -80,3 +80,36 @@ func (ch *Cache) Size() int {
 func (ch *Cache) Debug() {
 	ch.debug = true
 }
+
+// OverWrite updates an already set value using it key
+func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Duration) error {
+	var isFound bool
+	for index, cache := range ch.Fscache {
+		if _, ok := cache[key]; ok {
+			isFound = true
+			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+		}
+	}
+
+	if !isFound {
+		return errKeyNotFound
+	}
+
+	var ttl time.Duration
+	for i, v := range duration {
+		if i == 0 {
+			ttl = v
+			break
+		}
+	}
+
+	fs := make(map[string]cacheData)
+	fs[key] = cacheData{
+		value:    value,
+		duration: time.Now().Add(ttl),
+	}
+
+	ch.Fscache = append(ch.Fscache, fs)
+
+	return nil
+}

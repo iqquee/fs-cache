@@ -98,3 +98,16 @@ func TestDebug(t *testing.T) {
 	ch.Debug()
 	assert.EqualValues(t, true, ch.debug)
 }
+
+func TestOverWrite(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	err := ch.OverWrite("key1", "overwrite1", time.Minute)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NoError(t, nil)
+}

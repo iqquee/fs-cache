@@ -36,6 +36,8 @@ type (
 		Size() int
 		// Debug() enables debug to get certain logs
 		Debug()
+		// OverWrite updates an already set value using it key
+		OverWrite(key string, value interface{}, duration ...time.Duration) error
 	}
 )
 
