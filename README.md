@@ -24,7 +24,11 @@ func main() {
     fs.Debug()
 
 	if err := fs.Set("1", "user1", 5*time.Minute); err != nil {
-		fmt.Println("set:", err)
+		fmt.Println("error setting:", err)
+	}
+
+	if err := fs.OverWrite("1", "overwrite1", 1*time.Minute); err != nil {
+		fmt.Println("error overwriting:", err)
 	}
 
 	if err := fs.Del("1"); err != nil {
