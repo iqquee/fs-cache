@@ -111,3 +111,16 @@ func TestOverWrite(t *testing.T) {
 
 	assert.NoError(t, nil)
 }
+
+func TestOverWriteWithKey(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	err := ch.OverWriteWithKey("key1", "newKey1", "value1", time.Minute)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NoError(t, nil)
+}

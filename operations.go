@@ -113,3 +113,36 @@ func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Durat
 
 	return nil
 }
+
+// OverWriteWithKey updates an already set value and key using the previously set key
+func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error {
+	var isFound bool
+	for index, cache := range ch.Fscache {
+		if _, ok := cache[prevkey]; ok {
+			isFound = true
+			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+		}
+	}
+
+	if !isFound {
+		return errKeyNotFound
+	}
+
+	var ttl time.Duration
+	for i, v := range duration {
+		if i == 0 {
+			ttl = v
+			break
+		}
+	}
+
+	fs := make(map[string]cacheData)
+	fs[newKey] = cacheData{
+		value:    value,
+		duration: time.Now().Add(ttl),
+	}
+
+	ch.Fscache = append(ch.Fscache, fs)
+
+	return nil
+}
