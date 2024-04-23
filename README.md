@@ -20,30 +20,23 @@ import (
 
 func main() {
 	fs := fscache.New()
+	// set if you want to get logs of activities
     fs.Debug()
 
 	if err := fs.Set("1", "user1", 5*time.Minute); err != nil {
 		fmt.Println("set:", err)
 	}
 
-	if err := fs.Set("2", "user2"); err != nil {
-		fmt.Println("error setting user2:", err)
-	}
-
-	if err := fs.Set("3", "user3"); err != nil {
-		fmt.Println("error setting user3:", err)
-	}
-
 	if err := fs.Del("1"); err != nil {
 		fmt.Println("error deleting key 1:", err)
 	}
 
-	result, err := fs.Get("2")
+	result, err := fs.Get("1")
 	if err != nil {
-		fmt.Println("error getting key 2:", err)
+		fmt.Println("error getting key 1:", err)
 	}
 
-	fmt.Println("key 2 value:", result)
+	fmt.Println("key 1 value:", result)
 
     if err := fs.Clear(); err != nil {
 		fmt.Println("error clearing all datas:", err)
