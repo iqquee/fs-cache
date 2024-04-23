@@ -56,6 +56,8 @@ func (ch *Cache) Del(key string) error {
 		if _, ok := cache[key]; ok {
 			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
 			return nil
+		} else {
+			return errKeyNotFound
 		}
 	}
 
