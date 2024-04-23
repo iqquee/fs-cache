@@ -1,7 +1,10 @@
 package fscache
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/robfig/cron/v3"
 )
 
 type (
@@ -41,6 +44,34 @@ func New() Operations {
 	var fs []map[string]cacheData
 	ch := Cache{
 		Fscache: fs,
+	}
+
+	c := cron.New()
+
+	// cron job set to run every 1 minute
+	c.AddFunc("*/1 * * * *", func() {
+		if ch.debug {
+			fmt.Println("cron job running...")
+		}
+		for i := 0; i < len(ch.Fscache); i++ {
+			for _, value := range ch.Fscache[i] {
+				currenctTime := time.Now()
+				if currenctTime.Before(value.duration) {
+					if ch.debug {
+						fmt.Printf("data object [%v] got expired ", ch.Fscache[i])
+					}
+					// take the data from off the array object
+					ch.Fscache = append(ch.Fscache[:i], ch.Fscache[i+1:]...)
+					// decrement the array index by 1 since an object have been taken off the array
+					i--
+				}
+			}
+		}
+	})
+
+	c.Start()
+	if ch.debug {
+		fmt.Printf("cron job entries ::: %v", c.Entries())
 	}
 
 	op := Operations(&ch)
