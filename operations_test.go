@@ -17,13 +17,13 @@ var testCases = []map[string]cacheData{
 	},
 	{
 		"key2": cacheData{
-			value:    "value2",
+			value:    10,
 			duration: time.Time{},
 		},
 	},
 	{
 		"key3": cacheData{
-			value:    "value1",
+			value:    true,
 			duration: time.Time{},
 		},
 	},
@@ -34,8 +34,7 @@ func TestSet(t *testing.T) {
 		Fscache: testCases,
 	}
 
-	err := ch.Set("key1", "value1", time.Minute)
-	if err != nil {
+	if err := ch.Set("key1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -60,8 +59,7 @@ func TestDel(t *testing.T) {
 		Fscache: testCases,
 	}
 
-	err := ch.Del("key1")
-	if err != nil {
+	if err := ch.Del("key1"); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -73,8 +71,7 @@ func TestClear(t *testing.T) {
 		Fscache: testCases,
 	}
 
-	err := ch.Clear()
-	if err != nil {
+	if err := ch.Clear(); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -104,8 +101,7 @@ func TestOverWrite(t *testing.T) {
 		Fscache: testCases,
 	}
 
-	err := ch.OverWrite("key1", "overwrite1", time.Minute)
-	if err != nil {
+	if err := ch.OverWrite("key1", "overwrite1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -117,10 +113,22 @@ func TestOverWriteWithKey(t *testing.T) {
 		Fscache: testCases,
 	}
 
-	err := ch.OverWriteWithKey("key1", "newKey1", "value1", time.Minute)
-	if err != nil {
+	if err := ch.OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
 	assert.NoError(t, nil)
+}
+
+func TestTypeOf(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	typeOf, err := ch.TypeOf("key1")
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.EqualValues(t, "string", typeOf)
 }
