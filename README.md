@@ -65,7 +65,7 @@ fmt.Println("getMany:", getMany)
 ```
 
 ### OverWrite()
-OverWrite updates an already set value using it key
+OverWrite() updates an already set value using it key
 ```go
 fs := fscache.New()
 
@@ -75,7 +75,7 @@ if err := fs.OverWrite("key1", "overwrite1", 1*time.Minute); err != nil {
 ```
 
 ### OverWriteWithKey()
-OverWriteWithKey updates an already set value and key using the previously set key
+OverWriteWithKey() updates an already set value and key using the previously set key
 ```go
 fs := fscache.New()
 
@@ -95,7 +95,7 @@ if err := fs.Del("key1"); err != nil {
 ```
 
 ### TypeOf()
-TypeOf returns the data type of a value
+TypeOf() returns the data type of a value
 ```go
 fs := fscache.New()
 
