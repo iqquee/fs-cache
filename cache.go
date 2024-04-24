@@ -40,6 +40,18 @@ type (
 		OverWrite(key string, value interface{}, duration ...time.Duration) error
 		// OverWriteWithKey updates an already set value and key using the previously set key
 		OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error
+		// ExportJson exports all saves data objects as json
+		ExportJson() []map[string]cacheData
+		// ImportJson takes in an array of json objects and saves it into memory for later access
+		ImportJson([]map[string]interface{}) error
+		// Keys returns all the keys in the storage
+		Keys() []string
+		// Values returns all the values in the storage
+		Values() []interface{}
+		// TypeOf returns the data type of a value
+		TypeOf(key string) (string, error)
+		// SaveToFile saves the array of objects into a file
+		SaveToFile(fileName string) error
 	}
 )
 

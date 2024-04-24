@@ -47,6 +47,12 @@ func main() {
 
 	fmt.Println("key 1 value:", result)
 
+	typeOf, err := fs.TypeOf("newKey")
+	if err != nil {
+		fmt.Println("error typeOf:", err)
+	}
+	fmt.Println("typeOf value:", typeOf)
+
 	if err := fs.Clear(); err != nil {
 		fmt.Println("error clearing all datas:", err)
 	}
