@@ -8,23 +8,23 @@ import (
 )
 
 // test cases
-var testCases = []map[string]cacheData{
+var testCases = []map[string]CacheData{
 	{
-		"key1": cacheData{
-			value:    "value1",
-			duration: time.Now().Add(time.Minute),
+		"key1": CacheData{
+			Value:    "value1",
+			Duration: time.Now().Add(time.Minute),
 		},
 	},
 	{
-		"key2": cacheData{
-			value:    10,
-			duration: time.Time{},
+		"key2": CacheData{
+			Value:    10,
+			Duration: time.Time{},
 		},
 	},
 	{
-		"key3": cacheData{
-			value:    true,
-			duration: time.Time{},
+		"key3": CacheData{
+			Value:    true,
+			Duration: time.Time{},
 		},
 	},
 }
@@ -131,4 +131,38 @@ func TestTypeOf(t *testing.T) {
 	}
 
 	assert.EqualValues(t, "string", typeOf)
+}
+
+func TestKeyValuePairs(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	datas := ch.KeyValuePairs()
+	assert.NotNil(t, datas)
+}
+
+func TestImportJson(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	testCase := []map[string]CacheData{
+		{
+			"key4": CacheData{
+				Value:    "value4",
+				Duration: time.Now().Add(time.Minute),
+			},
+			"key5": CacheData{
+				Value: false,
+			},
+		},
+	}
+
+	datas, err := ch.ImportJson(testCase)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NotNil(t, datas)
 }
