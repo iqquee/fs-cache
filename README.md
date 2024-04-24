@@ -53,6 +53,13 @@ func main() {
 	}
 	fmt.Println("typeOf value:", typeOf)
 
+	importJson, err := fs.ImportJson(testCase)
+	if err != nil {
+		fmt.Println("error importJson:", err)
+	}
+	fmt.Println("importJson response:", importJson)
+
+
 	if err := fs.Clear(); err != nil {
 		fmt.Println("error clearing all datas:", err)
 	}

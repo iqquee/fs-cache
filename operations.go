@@ -31,8 +31,8 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 
 	fs := make(map[string]CacheData)
 	fs[key] = CacheData{
-		value:    value,
-		duration: time.Now().Add(ttl),
+		Value:    value,
+		Duration: time.Now().Add(ttl),
 	}
 
 	ch.Fscache = append(ch.Fscache, fs)
@@ -44,7 +44,7 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 func (ch *Cache) Get(key string) (interface{}, error) {
 	for _, cache := range ch.Fscache {
 		if val, ok := cache[key]; ok {
-			return val.value, nil
+			return val.Value, nil
 		}
 	}
 
@@ -110,8 +110,8 @@ func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Durat
 
 	fs := make(map[string]CacheData)
 	fs[key] = CacheData{
-		value:    value,
-		duration: time.Now().Add(ttl),
+		Value:    value,
+		Duration: time.Now().Add(ttl),
 	}
 
 	ch.Fscache = append(ch.Fscache, fs)
@@ -143,8 +143,8 @@ func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, dur
 
 	fs := make(map[string]CacheData)
 	fs[newKey] = CacheData{
-		value:    value,
-		duration: time.Now().Add(ttl),
+		Value:    value,
+		Duration: time.Now().Add(ttl),
 	}
 
 	ch.Fscache = append(ch.Fscache, fs)
@@ -158,16 +158,18 @@ func (ch *Cache) ExportJson() []map[string]CacheData {
 }
 
 // ImportJson() takes in an array of json objects and saves it into memory for later access
-func (ch *Cache) ImportJson(data []map[string]CacheData) error {
+func (ch *Cache) ImportJson(data []map[string]CacheData) ([]map[string]interface{}, error) {
 	ch.Fscache = append(ch.Fscache, data...)
-	return nil
+	KeyValuePairs := ch.KeyValuePairs()
+
+	return KeyValuePairs, nil
 }
 
 // Keys() returns all the keys in the storage
 func (ch *Cache) Keys() []string {
 	var keys []string
-	for i := 0; i < len(ch.Fscache); i++ {
-		for key := range ch.Fscache[i] {
+	for _, cache := range ch.Fscache {
+		for key := range cache {
 			keys = append(keys, key)
 		}
 	}
@@ -178,9 +180,9 @@ func (ch *Cache) Keys() []string {
 // Values() returns all the values in the storage
 func (ch *Cache) Values() []interface{} {
 	var values []interface{}
-	for i := 0; i < len(ch.Fscache); i++ {
-		for _, v := range ch.Fscache[i] {
-			values = append(values, v.value)
+	for _, cache := range ch.Fscache {
+		for _, v := range cache {
+			values = append(values, v.Value)
 		}
 	}
 
@@ -192,7 +194,7 @@ func (ch *Cache) TypeOf(key string) (string, error) {
 	for _, cache := range ch.Fscache {
 		value, ok := cache[key]
 		if ok {
-			return reflect.TypeOf(value.value).String(), nil
+			return reflect.TypeOf(value.Value).String(), nil
 		}
 	}
 
@@ -211,7 +213,7 @@ func (ch *Cache) KeyValuePairs() []map[string]interface{} {
 	for _, v := range ch.Fscache {
 		data := make(map[string]interface{})
 		for key, value := range v {
-			data[key] = value.value
+			data[key] = value.Value
 		}
 
 		keyValuePairs = append(keyValuePairs, data)

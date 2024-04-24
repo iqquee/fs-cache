@@ -10,8 +10,8 @@ import (
 type (
 	// cacheData object
 	CacheData struct {
-		value    interface{}
-		duration time.Time
+		Value    interface{}
+		Duration time.Time
 	}
 
 	// Cache object instance
@@ -43,7 +43,7 @@ type (
 		// ExportJson exports all saves data objects as json
 		ExportJson() []map[string]CacheData
 		// ImportJson takes in an array of json objects and saves it into memory for later access
-		ImportJson(data []map[string]CacheData) error
+		ImportJson(data []map[string]CacheData) ([]map[string]interface{}, error)
 		// Keys returns all the keys in the storage
 		Keys() []string
 		// Values returns all the values in the storage
@@ -74,7 +74,7 @@ func New() Operations {
 		for i := 0; i < len(ch.Fscache); i++ {
 			for _, value := range ch.Fscache[i] {
 				currenctTime := time.Now()
-				if currenctTime.Before(value.duration) {
+				if currenctTime.Before(value.Duration) {
 					if ch.debug {
 						fmt.Printf("data object [%v] got expired ", ch.Fscache[i])
 					}

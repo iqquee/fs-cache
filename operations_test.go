@@ -11,20 +11,20 @@ import (
 var testCases = []map[string]CacheData{
 	{
 		"key1": CacheData{
-			value:    "value1",
-			duration: time.Now().Add(time.Minute),
+			Value:    "value1",
+			Duration: time.Now().Add(time.Minute),
 		},
 	},
 	{
 		"key2": CacheData{
-			value:    10,
-			duration: time.Time{},
+			Value:    10,
+			Duration: time.Time{},
 		},
 	},
 	{
 		"key3": CacheData{
-			value:    true,
-			duration: time.Time{},
+			Value:    true,
+			Duration: time.Time{},
 		},
 	},
 }
@@ -139,5 +139,30 @@ func TestKeyValuePairs(t *testing.T) {
 	}
 
 	datas := ch.KeyValuePairs()
+	assert.NotNil(t, datas)
+}
+
+func TestImportJson(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	testCase := []map[string]CacheData{
+		{
+			"key4": CacheData{
+				Value:    "value4",
+				Duration: time.Now().Add(time.Minute),
+			},
+			"key5": CacheData{
+				Value: false,
+			},
+		},
+	}
+
+	datas, err := ch.ImportJson(testCase)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
 	assert.NotNil(t, datas)
 }
