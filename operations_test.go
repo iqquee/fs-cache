@@ -1,6 +1,7 @@
 package fscache
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -142,7 +143,7 @@ func TestKeyValuePairs(t *testing.T) {
 	assert.NotNil(t, datas)
 }
 
-func TestImportJson(t *testing.T) {
+func TestSetMany(t *testing.T) {
 	ch := Cache{
 		Fscache: testCases,
 	}
@@ -159,10 +160,40 @@ func TestImportJson(t *testing.T) {
 		},
 	}
 
-	datas, err := ch.ImportJson(testCase)
+	datas, err := ch.SetMany(testCase)
 	if err != nil {
 		assert.Error(t, err)
 	}
 
 	assert.NotNil(t, datas)
+}
+
+func TestGetMany(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	keys := []string{"key1", "key2"}
+
+	result := ch.GetMany(keys)
+	fmt.Println(result)
+	assert.NotNil(t, result)
+}
+
+func TestKeys(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	keys := ch.Keys()
+	assert.NotNil(t, keys)
+}
+
+func TestValues(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	values := ch.Values()
+	assert.NotNil(t, values)
 }

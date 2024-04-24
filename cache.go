@@ -26,8 +26,12 @@ type (
 	Operations interface {
 		// Set() adds a new data into the in-memmory storage
 		Set(key string, value interface{}, duration ...time.Duration) error
+		// SetMany() sets many data objects into memory for later access
+		SetMany(data []map[string]CacheData) ([]map[string]interface{}, error)
 		// Get() retrieves a data from the in-memmory storage
 		Get(key string) (interface{}, error)
+		// GetMany() retrieves datas with matching keys from the in-memmory storage
+		GetMany(keys []string) []map[string]interface{}
 		// Del() deletes a data from the in-memmory storage
 		Del(key string) error
 		// Clear() deletes all datas from the in-memmory storage
@@ -40,18 +44,12 @@ type (
 		OverWrite(key string, value interface{}, duration ...time.Duration) error
 		// OverWriteWithKey updates an already set value and key using the previously set key
 		OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error
-		// ExportJson exports all saves data objects as json
-		ExportJson() []map[string]CacheData
-		// ImportJson takes in an array of json objects and saves it into memory for later access
-		ImportJson(data []map[string]CacheData) ([]map[string]interface{}, error)
-		// Keys returns all the keys in the storage
+		// Keys() returns all the keys in the storage
 		Keys() []string
-		// Values returns all the values in the storage
+		// Values() returns all the values in the storage
 		Values() []interface{}
-		// TypeOf returns the data type of a value
+		// TypeOf() returns the data type of a value
 		TypeOf(key string) (string, error)
-		// SaveToFile saves the array of objects into a file
-		SaveToFile(fileName string) error
 		// KeyValuePairs() returns an array of key value pairs of all the datas in the storage
 		KeyValuePairs() []map[string]interface{}
 	}
