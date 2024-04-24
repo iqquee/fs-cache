@@ -29,8 +29,8 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 		}
 	}
 
-	fs := make(map[string]cacheData)
-	fs[key] = cacheData{
+	fs := make(map[string]CacheData)
+	fs[key] = CacheData{
 		value:    value,
 		duration: time.Now().Add(ttl),
 	}
@@ -108,8 +108,8 @@ func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Durat
 		}
 	}
 
-	fs := make(map[string]cacheData)
-	fs[key] = cacheData{
+	fs := make(map[string]CacheData)
+	fs[key] = CacheData{
 		value:    value,
 		duration: time.Now().Add(ttl),
 	}
@@ -141,8 +141,8 @@ func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, dur
 		}
 	}
 
-	fs := make(map[string]cacheData)
-	fs[newKey] = cacheData{
+	fs := make(map[string]CacheData)
+	fs[newKey] = CacheData{
 		value:    value,
 		duration: time.Now().Add(ttl),
 	}
@@ -153,12 +153,13 @@ func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, dur
 }
 
 // ExportJson() exports all saves data objects as json
-func (ch *Cache) ExportJson() []map[string]cacheData {
+func (ch *Cache) ExportJson() []map[string]CacheData {
 	return nil
 }
 
 // ImportJson() takes in an array of json objects and saves it into memory for later access
-func (ch *Cache) ImportJson([]map[string]interface{}) error {
+func (ch *Cache) ImportJson(data []map[string]CacheData) error {
+	ch.Fscache = append(ch.Fscache, data...)
 	return nil
 }
 
@@ -201,4 +202,21 @@ func (ch *Cache) TypeOf(key string) (string, error) {
 // SaveToFile() saves the array of objects into a file
 func (ch *Cache) SaveToFile(fileName string) error {
 	return nil
+}
+
+// KeyValuePairs() returns an array of key value pairs of all the datas in the storage
+func (ch *Cache) KeyValuePairs() []map[string]interface{} {
+	var keyValuePairs = []map[string]interface{}{}
+
+	for _, v := range ch.Fscache {
+		data := make(map[string]interface{})
+		for key, value := range v {
+			data[key] = value.value
+		}
+
+		keyValuePairs = append(keyValuePairs, data)
+	}
+
+	return keyValuePairs
+
 }

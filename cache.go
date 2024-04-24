@@ -9,7 +9,7 @@ import (
 
 type (
 	// cacheData object
-	cacheData struct {
+	CacheData struct {
 		value    interface{}
 		duration time.Time
 	}
@@ -19,7 +19,7 @@ type (
 		// debug enables debugging
 		debug bool
 		// Fscache is an [] that the datas are saved into
-		Fscache []map[string]cacheData
+		Fscache []map[string]CacheData
 	}
 
 	// Operations lists all available operations on the fscache
@@ -41,9 +41,9 @@ type (
 		// OverWriteWithKey updates an already set value and key using the previously set key
 		OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error
 		// ExportJson exports all saves data objects as json
-		ExportJson() []map[string]cacheData
+		ExportJson() []map[string]CacheData
 		// ImportJson takes in an array of json objects and saves it into memory for later access
-		ImportJson([]map[string]interface{}) error
+		ImportJson(data []map[string]CacheData) error
 		// Keys returns all the keys in the storage
 		Keys() []string
 		// Values returns all the values in the storage
@@ -52,12 +52,14 @@ type (
 		TypeOf(key string) (string, error)
 		// SaveToFile saves the array of objects into a file
 		SaveToFile(fileName string) error
+		// KeyValuePairs() returns an array of key value pairs of all the datas in the storage
+		KeyValuePairs() []map[string]interface{}
 	}
 )
 
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
-	var fs []map[string]cacheData
+	var fs []map[string]CacheData
 	ch := Cache{
 		Fscache: fs,
 	}

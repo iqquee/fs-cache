@@ -8,21 +8,21 @@ import (
 )
 
 // test cases
-var testCases = []map[string]cacheData{
+var testCases = []map[string]CacheData{
 	{
-		"key1": cacheData{
+		"key1": CacheData{
 			value:    "value1",
 			duration: time.Now().Add(time.Minute),
 		},
 	},
 	{
-		"key2": cacheData{
+		"key2": CacheData{
 			value:    10,
 			duration: time.Time{},
 		},
 	},
 	{
-		"key3": cacheData{
+		"key3": CacheData{
 			value:    true,
 			duration: time.Time{},
 		},
@@ -131,4 +131,13 @@ func TestTypeOf(t *testing.T) {
 	}
 
 	assert.EqualValues(t, "string", typeOf)
+}
+
+func TestKeyValuePairs(t *testing.T) {
+	ch := Cache{
+		Fscache: testCases,
+	}
+
+	datas := ch.KeyValuePairs()
+	assert.NotNil(t, datas)
 }
