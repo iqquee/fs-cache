@@ -40,6 +40,14 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 	return nil
 }
 
+// SetMany() sets many data objects into memory for later access
+func (ch *Cache) SetMany(data []map[string]CacheData) ([]map[string]interface{}, error) {
+	ch.Fscache = append(ch.Fscache, data...)
+	KeyValuePairs := ch.KeyValuePairs()
+
+	return KeyValuePairs, nil
+}
+
 // Get() retrieves a data from the in-memmory storage
 func (ch *Cache) Get(key string) (interface{}, error) {
 	for _, cache := range ch.Fscache {
@@ -49,6 +57,23 @@ func (ch *Cache) Get(key string) (interface{}, error) {
 	}
 
 	return nil, errKeyNotFound
+}
+
+// GetMany() retrieves datas with matching keys from the in-memmory storage
+func (ch *Cache) GetMany(keys []string) []map[string]interface{} {
+	var keyValuePairs = []map[string]interface{}{}
+
+	for _, cache := range ch.Fscache {
+		data := make(map[string]interface{})
+		for _, key := range keys {
+			if val, ok := cache[key]; ok {
+				data[key] = val.Value
+				keyValuePairs = append(keyValuePairs, data)
+			}
+		}
+	}
+
+	return keyValuePairs
 }
 
 // Del() deletes a data from the in-memmory storage
@@ -152,19 +177,6 @@ func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, dur
 	return nil
 }
 
-// ExportJson() exports all saves data objects as json
-func (ch *Cache) ExportJson() []map[string]CacheData {
-	return nil
-}
-
-// ImportJson() takes in an array of json objects and saves it into memory for later access
-func (ch *Cache) ImportJson(data []map[string]CacheData) ([]map[string]interface{}, error) {
-	ch.Fscache = append(ch.Fscache, data...)
-	KeyValuePairs := ch.KeyValuePairs()
-
-	return KeyValuePairs, nil
-}
-
 // Keys() returns all the keys in the storage
 func (ch *Cache) Keys() []string {
 	var keys []string
@@ -220,5 +232,4 @@ func (ch *Cache) KeyValuePairs() []map[string]interface{} {
 	}
 
 	return keyValuePairs
-
 }
