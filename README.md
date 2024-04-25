@@ -6,6 +6,10 @@ A simple in-memory cache in golang
 ```sh
 go get github.com/iqquee/fs-cache@latest
 ```
+## Import
+```sh
+fscache "github.com/iqquee/fs-cache"
+```
 
 ## Usage
 
@@ -45,6 +49,18 @@ fmt.Println("key1:", result)
 SetMany() sets many data objects into memory for later access
 ```go
 fs := fscache.New()
+
+testCase := []map[string]fscache.CacheData{
+	{
+		"key4": fscache.CacheData{
+			Value:    "value4",
+			Duration: time.Now().Add(time.Minute),
+		},
+		"key5": fscache.CacheData{
+			Value: false,
+		},
+	},
+}
 
 setMany, err := fs.SetMany(testCase)
 if err != nil {
