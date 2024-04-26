@@ -1,6 +1,5 @@
 # fs-cache
-A simple in-memory cache in golang
-
+fs-cache provides a quick way to store and retrieve frequently accessed data, significantly enhancing your application performance and reducing database queries / API calls. It supports data caching with an optional params for expiration
 
 ## Installation
 ```sh
