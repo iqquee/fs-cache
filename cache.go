@@ -20,6 +20,9 @@ type (
 		debug bool
 		// Fscache is an [] that the datas are saved into
 		Fscache []map[string]CacheData
+
+		// NoSQL for NoSQL-like database
+		NoSQL []map[string]interface{}
 	}
 
 	// Operations lists all available operations on the fscache
