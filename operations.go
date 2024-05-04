@@ -14,8 +14,8 @@ var (
 )
 
 // Set() adds a new data into the in-memmory storage
-func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) error {
-	for _, cache := range ch.Fscache {
+func (kp *KeyPair) Set(key string, value interface{}, duration ...time.Duration) error {
+	for _, cache := range kp.Storage {
 		if _, ok := cache[key]; ok {
 			return errKeyExists
 		}
@@ -35,22 +35,22 @@ func (ch *Cache) Set(key string, value interface{}, duration ...time.Duration) e
 		Duration: time.Now().Add(ttl),
 	}
 
-	ch.Fscache = append(ch.Fscache, fs)
+	kp.Storage = append(kp.Storage, fs)
 
 	return nil
 }
 
 // SetMany() sets many data objects into memory for later access
-func (ch *Cache) SetMany(data []map[string]CacheData) ([]map[string]interface{}, error) {
-	ch.Fscache = append(ch.Fscache, data...)
-	KeyValuePairs := ch.KeyValuePairs()
+func (kp *KeyPair) SetMany(data []map[string]CacheData) ([]map[string]interface{}, error) {
+	kp.Storage = append(kp.Storage, data...)
+	KeyValuePairs := kp.KeyValuePairs()
 
 	return KeyValuePairs, nil
 }
 
 // Get() retrieves a data from the in-memmory storage
-func (ch *Cache) Get(key string) (interface{}, error) {
-	for _, cache := range ch.Fscache {
+func (kp *KeyPair) Get(key string) (interface{}, error) {
+	for _, cache := range kp.Storage {
 		if val, ok := cache[key]; ok {
 			return val.Value, nil
 		}
@@ -60,10 +60,10 @@ func (ch *Cache) Get(key string) (interface{}, error) {
 }
 
 // GetMany() retrieves datas with matching keys from the in-memmory storage
-func (ch *Cache) GetMany(keys []string) []map[string]interface{} {
+func (kp *KeyPair) GetMany(keys []string) []map[string]interface{} {
 	var keyValuePairs = []map[string]interface{}{}
 
-	for _, cache := range ch.Fscache {
+	for _, cache := range kp.Storage {
 		data := make(map[string]interface{})
 		for _, key := range keys {
 			if val, ok := cache[key]; ok {
@@ -77,12 +77,12 @@ func (ch *Cache) GetMany(keys []string) []map[string]interface{} {
 }
 
 // Del() deletes a data from the in-memmory storage
-func (ch *Cache) Del(key string) error {
+func (kp *KeyPair) Del(key string) error {
 	var isFound bool
-	for index, cache := range ch.Fscache {
+	for index, cache := range kp.Storage {
 		if _, ok := cache[key]; ok {
 			isFound = true
-			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+			kp.Storage = append(kp.Storage[:index], kp.Storage[index+1:]...)
 			return nil
 		}
 	}
@@ -95,29 +95,29 @@ func (ch *Cache) Del(key string) error {
 }
 
 // Clear() deletes all datas from the in-memmory storage
-func (ch *Cache) Clear() error {
-	ch.Fscache = ch.Fscache[:0]
+func (kp *KeyPair) Clear() error {
+	kp.Storage = kp.Storage[:0]
 
 	return nil
 }
 
 // Size() retrieves the total data objects in the in-memmory storage
-func (ch *Cache) Size() int {
-	return len(ch.Fscache)
+func (kp *KeyPair) Size() int {
+	return len(kp.Storage)
 }
 
 // Debug() enables debug to get certain logs
-func (ch *Cache) Debug() {
-	ch.debug = true
+func (c *Cache) Debug() {
+	c.debug = true
 }
 
 // OverWrite() updates an already set value using it key
-func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Duration) error {
+func (kp *KeyPair) OverWrite(key string, value interface{}, duration ...time.Duration) error {
 	var isFound bool
-	for index, cache := range ch.Fscache {
+	for index, cache := range kp.Storage {
 		if _, ok := cache[key]; ok {
 			isFound = true
-			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+			kp.Storage = append(kp.Storage[:index], kp.Storage[index+1:]...)
 		}
 	}
 
@@ -139,18 +139,18 @@ func (ch *Cache) OverWrite(key string, value interface{}, duration ...time.Durat
 		Duration: time.Now().Add(ttl),
 	}
 
-	ch.Fscache = append(ch.Fscache, fs)
+	kp.Storage = append(kp.Storage, fs)
 
 	return nil
 }
 
 // OverWriteWithKey() updates an already set value and key using the previously set key
-func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error {
+func (kp *KeyPair) OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error {
 	var isFound bool
-	for index, cache := range ch.Fscache {
+	for index, cache := range kp.Storage {
 		if _, ok := cache[prevkey]; ok {
 			isFound = true
-			ch.Fscache = append(ch.Fscache[:index], ch.Fscache[index+1:]...)
+			kp.Storage = append(kp.Storage[:index], kp.Storage[index+1:]...)
 		}
 	}
 
@@ -172,15 +172,15 @@ func (ch *Cache) OverWriteWithKey(prevkey, newKey string, value interface{}, dur
 		Duration: time.Now().Add(ttl),
 	}
 
-	ch.Fscache = append(ch.Fscache, fs)
+	kp.Storage = append(kp.Storage, fs)
 
 	return nil
 }
 
 // Keys() returns all the keys in the storage
-func (ch *Cache) Keys() []string {
+func (kp *KeyPair) Keys() []string {
 	var keys []string
-	for _, cache := range ch.Fscache {
+	for _, cache := range kp.Storage {
 		for key := range cache {
 			keys = append(keys, key)
 		}
@@ -190,9 +190,9 @@ func (ch *Cache) Keys() []string {
 }
 
 // Values() returns all the values in the storage
-func (ch *Cache) Values() []interface{} {
+func (kp *KeyPair) Values() []interface{} {
 	var values []interface{}
-	for _, cache := range ch.Fscache {
+	for _, cache := range kp.Storage {
 		for _, v := range cache {
 			values = append(values, v.Value)
 		}
@@ -202,8 +202,8 @@ func (ch *Cache) Values() []interface{} {
 }
 
 // TypeOf() returns the data type of a value
-func (ch *Cache) TypeOf(key string) (string, error) {
-	for _, cache := range ch.Fscache {
+func (kp *KeyPair) TypeOf(key string) (string, error) {
+	for _, cache := range kp.Storage {
 		value, ok := cache[key]
 		if ok {
 			return reflect.TypeOf(value.Value).String(), nil
@@ -213,16 +213,11 @@ func (ch *Cache) TypeOf(key string) (string, error) {
 	return "", errKeyNotFound
 }
 
-// SaveToFile() saves the array of objects into a file
-func (ch *Cache) SaveToFile(fileName string) error {
-	return nil
-}
-
 // KeyValuePairs() returns an array of key value pairs of all the datas in the storage
-func (ch *Cache) KeyValuePairs() []map[string]interface{} {
+func (kp *KeyPair) KeyValuePairs() []map[string]interface{} {
 	var keyValuePairs = []map[string]interface{}{}
 
-	for _, v := range ch.Fscache {
+	for _, v := range kp.Storage {
 		data := make(map[string]interface{})
 		for key, value := range v {
 			data[key] = value.Value

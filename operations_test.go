@@ -31,11 +31,14 @@ var testCases = []map[string]CacheData{
 }
 
 func TestSet(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	if err := ch.Set("key1", "value1", time.Minute); err != nil {
+	if err := ch.KeyValuePair().Set("key1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -43,11 +46,14 @@ func TestSet(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	value, err := ch.Get("key1")
+	value, err := ch.KeyValuePair().Get("key1")
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -56,11 +62,14 @@ func TestGet(t *testing.T) {
 }
 
 func TestDel(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	if err := ch.Del("key1"); err != nil {
+	if err := ch.KeyValuePair().Del("key1"); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -68,11 +77,14 @@ func TestDel(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	if err := ch.Clear(); err != nil {
+	if err := ch.KeyValuePair().Clear(); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -80,17 +92,23 @@ func TestClear(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	value := ch.Size()
+	value := ch.KeyValuePair().Size()
 	assert.EqualValues(t, 3, value)
 }
 
 func TestDebug(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
 	ch.Debug()
@@ -98,11 +116,14 @@ func TestDebug(t *testing.T) {
 }
 
 func TestOverWrite(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	if err := ch.OverWrite("key1", "overwrite1", time.Minute); err != nil {
+	if err := ch.KeyValuePair().OverWrite("key1", "overwrite1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -110,11 +131,14 @@ func TestOverWrite(t *testing.T) {
 }
 
 func TestOverWriteWithKey(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	if err := ch.OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
+	if err := ch.KeyValuePair().OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -122,11 +146,14 @@ func TestOverWriteWithKey(t *testing.T) {
 }
 
 func TestTypeOf(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	typeOf, err := ch.TypeOf("key1")
+	typeOf, err := ch.KeyValuePair().TypeOf("key1")
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -135,17 +162,23 @@ func TestTypeOf(t *testing.T) {
 }
 
 func TestKeyValuePairs(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	datas := ch.KeyValuePairs()
+	datas := ch.KeyValuePair().KeyValuePairs()
 	assert.NotNil(t, datas)
 }
 
 func TestSetMany(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
 	testCase := []map[string]CacheData{
@@ -160,7 +193,7 @@ func TestSetMany(t *testing.T) {
 		},
 	}
 
-	datas, err := ch.SetMany(testCase)
+	datas, err := ch.KeyValuePair().SetMany(testCase)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -169,31 +202,40 @@ func TestSetMany(t *testing.T) {
 }
 
 func TestGetMany(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
 	keys := []string{"key1", "key2"}
 
-	result := ch.GetMany(keys)
+	result := ch.KeyValuePair().GetMany(keys)
 	fmt.Println(result)
 	assert.NotNil(t, result)
 }
 
 func TestKeys(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	keys := ch.Keys()
+	keys := ch.KeyValuePair().Keys()
 	assert.NotNil(t, keys)
 }
 
 func TestValues(t *testing.T) {
+	kp := KeyPair{
+		Storage: testCases,
+	}
 	ch := Cache{
-		Fscache: testCases,
+		KeyPair: kp,
 	}
 
-	values := ch.Values()
+	values := ch.KeyValuePair().Values()
 	assert.NotNil(t, values)
 }
