@@ -49,7 +49,7 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 	}
 }
 
-// Insert inserts a new record into the storage with collection name
+// Insert adds a new record into the storage with collection name
 func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 	var objMap map[string]interface{}
 
@@ -68,6 +68,7 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 	}
 
 	// add additional data to the object
+	objMap["collectionName"] = c.CollectionName
 	objMap["id"] = uuid.New()
 	objMap["createdAt"] = time.Now()
 	objMap["deletedAt"] = nil
