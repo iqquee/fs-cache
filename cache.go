@@ -26,7 +26,7 @@ type (
 	NoSQL struct {
 		logger zerolog.Logger
 		// Storage for NoSQL-like storage
-		Storage []map[string]interface{}
+		Storage []interface{}
 	}
 
 	// Cache object
@@ -50,7 +50,7 @@ type (
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
 	var keyValuePair []map[string]CacheData
-	var noSql []map[string]interface{}
+	var noSql []interface{}
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 	kp := KeyPair{

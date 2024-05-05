@@ -9,8 +9,10 @@ type (
 	// Collection object
 	Collection struct {
 		CollectionName string
-		NoSQL          []map[string]interface{}
+		Storage        []interface{}
 	}
+
+	Result struct{}
 )
 
 // Collection defines the collection(table) name to perform an operations on
@@ -26,7 +28,7 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 	}
 
 	var colName string
-	// check if the ending string ends with the letter s
+	// check if the last index ends with the letter s
 	// if not, append (s) to it e.g user = users
 	if len(t.Name()) > 0 && string(t.Name()[len(t.Name())-1]) != "s" {
 		colName = fmt.Sprintf("%ss", t.Name())
@@ -36,6 +38,12 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 
 	return &Collection{
 		CollectionName: colName,
-		NoSQL:          ns.Storage,
+		Storage:        ns.Storage,
 	}
+}
+
+// Insert inserts a new record into the storage with collection name
+func (c *Collection) Insert(obj interface{}) interface{} {
+	c.Storage = append(c.Storage, obj)
+	return obj
 }
