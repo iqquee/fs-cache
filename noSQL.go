@@ -1,13 +1,19 @@
 package fscache
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 type (
 	// Collection object
 	Collection struct {
+		logger         zerolog.Logger
 		CollectionName string
 		Storage        []interface{}
 	}
@@ -37,13 +43,34 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 	}
 
 	return &Collection{
+		logger:         ns.logger,
 		CollectionName: colName,
 		Storage:        ns.Storage,
 	}
 }
 
 // Insert inserts a new record into the storage with collection name
-func (c *Collection) Insert(obj interface{}) interface{} {
-	c.Storage = append(c.Storage, obj)
-	return obj
+func (c *Collection) Insert(obj interface{}) (interface{}, error) {
+	var objMap map[string]interface{}
+
+	v := reflect.TypeOf(obj)
+	if v.Kind() != reflect.Map {
+		jsonObj, err := json.Marshal(obj)
+		if err != nil {
+			c.logger.Err(err).Msg("JSON marshal error")
+			return nil, err
+		}
+
+		if err := json.Unmarshal(jsonObj, &objMap); err != nil {
+			c.logger.Err(err).Msg("JSON unmarshal error")
+			return nil, err
+		}
+	}
+
+	// add additional data to the object
+	objMap["id"] = uuid.New()
+	objMap["createdAt"] = time.Now()
+
+	c.Storage = append(c.Storage, objMap)
+	return obj, nil
 }
