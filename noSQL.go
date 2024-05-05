@@ -75,3 +75,33 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 	c.Storage = append(c.Storage, objMap)
 	return obj, nil
 }
+
+// InsertMany adds many record into the storage at once
+func (c *Collection) InsertMany(objs []interface{}) error {
+	for _, obj := range objs {
+		var objMap map[string]interface{}
+
+		v := reflect.TypeOf(obj)
+		if v.Kind() != reflect.Map {
+			jsonObj, err := json.Marshal(obj)
+			if err != nil {
+				c.logger.Err(err).Msg("JSON marshal error")
+				return err
+			}
+
+			if err := json.Unmarshal(jsonObj, &objMap); err != nil {
+				c.logger.Err(err).Msg("JSON unmarshal error")
+				return err
+			}
+		}
+
+		// add additional data to the object
+		objMap["id"] = uuid.New()
+		objMap["createdAt"] = time.Now()
+		objMap["deletedAt"] = nil
+
+		c.Storage = append(c.Storage, objMap)
+	}
+
+	return nil
+}
