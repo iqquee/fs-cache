@@ -1,10 +1,11 @@
 package fscache
 
 import (
-	"fmt"
+	"os"
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"github.com/rs/zerolog"
 )
 
 type (
@@ -14,55 +15,57 @@ type (
 		Duration time.Time
 	}
 
-	// Cache object instance
+	// KeyPair object instance
+	KeyPair struct {
+		logger zerolog.Logger
+		// Storage for key value pair storage
+		Storage []map[string]CacheData
+	}
+
+	// NoSQL object instance
+	NoSQL struct {
+		logger zerolog.Logger
+		// Storage for NoSQL-like storage
+		Storage []interface{}
+	}
+
+	// Cache object
 	Cache struct {
 		// debug enables debugging
-		debug bool
-		// Fscache is an [] that the datas are saved into
-		Fscache []map[string]CacheData
-
-		// NoSQL for NoSQL-like database
-		NoSQL []map[string]interface{}
+		debug   bool
+		KeyPair KeyPair
+		NoSQL   NoSQL
 	}
 
 	// Operations lists all available operations on the fscache
 	Operations interface {
-		// Set() adds a new data into the in-memmory storage
-		Set(key string, value interface{}, duration ...time.Duration) error
-		// SetMany() sets many data objects into memory for later access
-		SetMany(data []map[string]CacheData) ([]map[string]interface{}, error)
-		// Get() retrieves a data from the in-memmory storage
-		Get(key string) (interface{}, error)
-		// GetMany() retrieves datas with matching keys from the in-memmory storage
-		GetMany(keys []string) []map[string]interface{}
-		// Del() deletes a data from the in-memmory storage
-		Del(key string) error
-		// Clear() deletes all datas from the in-memmory storage
-		Clear() error
-		// Size() retrieves the total data objects in the in-memmory storage
-		Size() int
 		// Debug() enables debug to get certain logs
 		Debug()
-		// OverWrite updates an already set value using it key
-		OverWrite(key string, value interface{}, duration ...time.Duration) error
-		// OverWriteWithKey updates an already set value and key using the previously set key
-		OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error
-		// Keys() returns all the keys in the storage
-		Keys() []string
-		// Values() returns all the values in the storage
-		Values() []interface{}
-		// TypeOf() returns the data type of a value
-		TypeOf(key string) (string, error)
-		// KeyValuePairs() returns an array of key value pairs of all the datas in the storage
-		KeyValuePairs() []map[string]interface{}
+
+		KeyValuePair() *KeyPair
+		NoSql() *NoSQL
 	}
 )
 
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
-	var fs []map[string]CacheData
+	var keyValuePair []map[string]CacheData
+	var noSql []interface{}
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+	kp := KeyPair{
+		logger:  logger,
+		Storage: keyValuePair,
+	}
+
+	noSQL := NoSQL{
+		logger:  logger,
+		Storage: noSql,
+	}
+
 	ch := Cache{
-		Fscache: fs,
+		KeyPair: kp,
+		NoSQL:   noSQL,
 	}
 
 	c := cron.New()
@@ -70,17 +73,17 @@ func New() Operations {
 	// cron job set to run every 1 minute
 	c.AddFunc("*/1 * * * *", func() {
 		if ch.debug {
-			fmt.Println("cron job running...")
+			logger.Info().Msg("cron job running...")
 		}
-		for i := 0; i < len(ch.Fscache); i++ {
-			for _, value := range ch.Fscache[i] {
+		for i := 0; i < len(ch.KeyPair.Storage); i++ {
+			for _, value := range ch.KeyPair.Storage[i] {
 				currenctTime := time.Now()
 				if currenctTime.Before(value.Duration) {
 					if ch.debug {
-						fmt.Printf("data object [%v] got expired ", ch.Fscache[i])
+						logger.Info().Msgf("data object [%v] got expired ", ch.KeyPair.Storage[i])
 					}
 					// take the data from off the array object
-					ch.Fscache = append(ch.Fscache[:i], ch.Fscache[i+1:]...)
+					ch.KeyPair.Storage = append(ch.KeyPair.Storage[:i], ch.KeyPair.Storage[i+1:]...)
 					// decrement the array index by 1 since an object have been taken off the array
 					i--
 				}
@@ -90,9 +93,55 @@ func New() Operations {
 
 	c.Start()
 	if ch.debug {
-		fmt.Printf("cron job entries ::: %v", c.Entries())
+		logger.Info().Msgf("cron job entries ::: %v", c.Entries())
 	}
 
 	op := Operations(&ch)
 	return op
 }
+
+// KeyValue returns KeyPair object
+func (c *Cache) KeyValuePair() *KeyPair {
+	return &c.KeyPair
+}
+
+// NoSql returns NoSql object
+func (c *Cache) NoSql() *NoSQL {
+	return &c.NoSQL
+}
+
+// create
+// client.NoSQL.Collection(struct{}).Insert(struct{})
+
+// create many
+// client.NoSQL.Collection(struct{}).InsertMany(struct{})
+
+// filter
+// client.NoSQL.Collection(struct{}).Find(map[string]interface{})
+
+// filter many
+// client.NoSQL.Collection(struct{}).FindMany([]map[string]interface{})
+
+// update
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).Update(struct{})
+
+// delete one
+// client.NoSQL.Collection(struct{}).DeleteOne(map[string]interface{})
+
+// delete many
+// client.NoSQL.Collection(struct{}).DeleteMany([]map[string]interface{})
+
+// filter and return all
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All()
+
+// filter and return all paginated
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All().Paginate(pd ...pageDetails)
+
+// count
+// client.NoSQL.Collection(struct{}).Count()
+
+// delete all datas in a collection
+// client.NoSQL.Collection(struct{}).Remove()
+
+// deletea all collections data
+// client.NoSQL.DropAll()
