@@ -1,10 +1,11 @@
 package fscache
 
 import (
-	"fmt"
+	"os"
 	"time"
 
 	"github.com/robfig/cron/v3"
+	"github.com/rs/zerolog"
 )
 
 type (
@@ -16,12 +17,14 @@ type (
 
 	// KeyPair object instance
 	KeyPair struct {
+		logger zerolog.Logger
 		// Storage for key value pair storage
 		Storage []map[string]CacheData
 	}
 
 	// NoSQL object instance
 	NoSQL struct {
+		logger zerolog.Logger
 		// Storage for NoSQL-like storage
 		Storage []map[string]interface{}
 	}
@@ -48,12 +51,15 @@ type (
 func New() Operations {
 	var keyValuePair []map[string]CacheData
 	var noSql []map[string]interface{}
+	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 	kp := KeyPair{
+		logger:  logger,
 		Storage: keyValuePair,
 	}
 
 	noSQL := NoSQL{
+		logger:  logger,
 		Storage: noSql,
 	}
 
@@ -67,14 +73,14 @@ func New() Operations {
 	// cron job set to run every 1 minute
 	c.AddFunc("*/1 * * * *", func() {
 		if ch.debug {
-			fmt.Println("cron job running...")
+			logger.Info().Msg("cron job running...")
 		}
 		for i := 0; i < len(ch.KeyPair.Storage); i++ {
 			for _, value := range ch.KeyPair.Storage[i] {
 				currenctTime := time.Now()
 				if currenctTime.Before(value.Duration) {
 					if ch.debug {
-						fmt.Printf("data object [%v] got expired ", ch.KeyPair.Storage[i])
+						logger.Info().Msgf("data object [%v] got expired ", ch.KeyPair.Storage[i])
 					}
 					// take the data from off the array object
 					ch.KeyPair.Storage = append(ch.KeyPair.Storage[:i], ch.KeyPair.Storage[i+1:]...)
@@ -87,7 +93,7 @@ func New() Operations {
 
 	c.Start()
 	if ch.debug {
-		fmt.Printf("cron job entries ::: %v", c.Entries())
+		logger.Info().Msgf("cron job entries ::: %v", c.Entries())
 	}
 
 	op := Operations(&ch)
@@ -106,14 +112,36 @@ func (c *Cache) NoSql() *NoSQL {
 
 // create
 // client.NoSQL.Collection(struct{}).Insert(struct{})
+
+// create many
 // client.NoSQL.Collection(struct{}).InsertMany(struct{})
+
 // filter
-// client.NoSQL.Collection(struct{}).Filter([]map[string]interface{})
+// client.NoSQL.Collection(struct{}).Find(map[string]interface{})
+
+// filter many
+// client.NoSQL.Collection(struct{}).FindMany([]map[string]interface{})
+
 // update
-// client.NoSQL.Collection(struct{}).Filter([]map[string]interface{}).Update(struct{})
-// delete
-// client.NoSQL.Collection(struct{}).Delete([]map[string]interface{})
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).Update(struct{})
+
+// delete one
+// client.NoSQL.Collection(struct{}).DeleteOne(map[string]interface{})
+
+// delete many
+// client.NoSQL.Collection(struct{}).DeleteMany([]map[string]interface{})
+
 // filter and return all
-// client.NoSQL.Collection(struct{}).Filter([]map[string]interface{}).All()
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All()
+
 // filter and return all paginated
-// client.NoSQL.Collection(struct{}).Filter([]map[string]interface{}).All().Paginate(pd ...pageDetails)
+// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All().Paginate(pd ...pageDetails)
+
+// count
+// client.NoSQL.Collection(struct{}).Count()
+
+// delete all datas in a collection
+// client.NoSQL.Collection(struct{}).Remove()
+
+// deletea all collections data
+// client.NoSQL.DropAll()
