@@ -70,6 +70,7 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 	// add additional data to the object
 	objMap["id"] = uuid.New()
 	objMap["createdAt"] = time.Now()
+	objMap["deletedAt"] = nil
 
 	c.Storage = append(c.Storage, objMap)
 	return obj, nil
