@@ -26,7 +26,7 @@ type (
 	NoSQL struct {
 		logger zerolog.Logger
 		// Storage for NoSQL-like storage
-		Storage []interface{}
+		storage []interface{}
 	}
 
 	// Cache object
@@ -60,7 +60,7 @@ func New() Operations {
 
 	noSQL := NoSQL{
 		logger:  logger,
-		Storage: noSql,
+		storage: noSql,
 	}
 
 	ch := Cache{
