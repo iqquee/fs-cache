@@ -2,6 +2,7 @@ package fscache
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -59,8 +60,14 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 
 // Insert adds a new record into the storage with collection name
 func (c *Collection) Insert(obj interface{}) (interface{}, error) {
-	objMap := make(map[string]interface{})
+	t := reflect.TypeOf(obj)
 
+	if t.Kind() != reflect.Struct && t.Kind() != reflect.Map {
+		c.logger.Error().Msg("Functions params must either be a [map] or a [struct]")
+		panic("Functions params must either be a [map] or an [struct]")
+	}
+
+	objMap := make(map[string]interface{})
 	jsonObj, err := json.Marshal(obj)
 	if err != nil {
 		c.logger.Err(err).Msg("JSON marshal error")
@@ -83,10 +90,29 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 }
 
 // InsertMany adds many record into the storage at once
-func (c *Collection) InsertMany(objs []interface{}) error {
-	for _, obj := range objs {
-		objMap := make(map[string]interface{})
+func (c *Collection) InsertMany(arr interface{}) error {
+	t := reflect.TypeOf(arr)
 
+	if t.Kind() != reflect.Slice {
+		c.logger.Error().Msg("Functions params must must be an [slice]")
+		return errors.New("functions params must be an [slice]")
+		// panic("Functions params must be an [slice]")
+	}
+
+	var arrObjs []map[string]interface{}
+	arrObj, err := json.Marshal(arr)
+	if err != nil {
+		c.logger.Err(err).Msg("JSON marshal error")
+		return err
+	}
+
+	if err := json.Unmarshal(arrObj, &arrObjs); err != nil {
+		c.logger.Err(err).Msg("JSON unmarshal error")
+		return err
+	}
+
+	for _, obj := range arrObjs {
+		objMap := make(map[string]interface{})
 		jsonObj, err := json.Marshal(obj)
 		if err != nil {
 			c.logger.Err(err).Msg("JSON marshal error")
@@ -107,5 +133,6 @@ func (c *Collection) InsertMany(objs []interface{}) error {
 		c.storage = append(c.storage, objMap)
 	}
 
+	fmt.Println(c.storage)
 	return nil
 }
