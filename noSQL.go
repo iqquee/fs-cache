@@ -64,7 +64,7 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.Map {
 		c.logger.Error().Msg("Functions params must either be a [map] or a [struct]")
-		panic("Functions params must either be a [map] or an [struct]")
+		return nil, errors.New("functions params must either be a [map] or an [struct]")
 	}
 
 	objMap := make(map[string]interface{})
@@ -96,7 +96,6 @@ func (c *Collection) InsertMany(arr interface{}) error {
 	if t.Kind() != reflect.Slice {
 		c.logger.Error().Msg("Functions params must must be an [slice]")
 		return errors.New("functions params must be an [slice]")
-		// panic("Functions params must be an [slice]")
 	}
 
 	var arrObjs []map[string]interface{}

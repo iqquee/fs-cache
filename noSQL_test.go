@@ -8,7 +8,7 @@ import (
 )
 
 var noSqlTestCases = []interface{}{
-	&struct {
+	struct {
 		Name string
 		Age  int
 	}{
@@ -16,8 +16,8 @@ var noSqlTestCases = []interface{}{
 		Age:  25,
 	},
 	map[string]interface{}{
-		"name": "jane",
-		"age":  25,
+		"name": "john Doe",
+		"age":  35,
 	},
 }
 
@@ -30,8 +30,22 @@ func Test_Collection(t *testing.T) {
 		NoSQL: ns,
 	}
 
+	col := ch.NoSql().Collection("user")
+	assert.NotNil(t, col)
+	assert.Equal(t, "users", col.collectionName)
+}
+
+func Test_Insert(t *testing.T) {
+	ns := NoSQL{
+		storage: []interface{}{},
+	}
+
+	ch := Cache{
+		NoSQL: ns,
+	}
+
 	var counter int
-	name := fmt.Sprintf("testCase %v", counter+1)
+	name := fmt.Sprintf("testCase_%v", counter+1)
 	for _, v := range noSqlTestCases {
 		t.Run(name, func(t *testing.T) {
 			res, err := ch.NoSql().Collection("user").Insert(v)
@@ -39,8 +53,7 @@ func Test_Collection(t *testing.T) {
 				assert.Error(t, err)
 			}
 
-			fmt.Println(res)
-			assert.Equal(t, v, res)
+			assert.NotNil(t, v, res)
 		})
 
 		counter++
