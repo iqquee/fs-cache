@@ -59,3 +59,20 @@ func Test_Insert(t *testing.T) {
 		counter++
 	}
 }
+
+func Test_InsertMany(t *testing.T) {
+	ns := NoSQL{
+		storage: []interface{}{},
+	}
+
+	ch := Cache{
+		NoSQL: ns,
+	}
+
+	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NoError(t, err)
+}
