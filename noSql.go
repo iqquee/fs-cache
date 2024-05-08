@@ -118,18 +118,12 @@ func (c *Collection) Find(filter map[string]interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	fmt.Println("storage", objMaps)
-
 	notFound := true
 	var foundObj map[string]interface{}
 	for _, item := range objMaps {
 		for key, val := range filter {
-			fmt.Println("incoming key", key)
-			fmt.Println("incoming val", val)
 			if item["colName"] == c.collectionName {
 				if v, ok := item[key]; ok && val == v {
-					fmt.Println("found key: ", key)
-					fmt.Println("found value: ", val)
 					notFound = false
 					foundObj = item
 					break
@@ -139,7 +133,7 @@ func (c *Collection) Find(filter map[string]interface{}) (interface{}, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("key not found")
+		return nil, errors.New("record not found")
 	}
 
 	return foundObj, nil

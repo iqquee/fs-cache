@@ -27,8 +27,6 @@ type (
 	// NoSQL object instance
 	NoSQL struct {
 		logger zerolog.Logger
-		// Storage for NoSQL-like storage
-		storage []interface{}
 	}
 
 	// Cache object
