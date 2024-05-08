@@ -16,19 +16,14 @@ var noSqlTestCases = []interface{}{
 		Age:  25,
 	},
 	map[string]interface{}{
-		"name": "john Doe",
-		"age":  35,
+		"name":    "John Doe",
+		"age":     35,
+		"colName": "users",
 	},
 }
 
 func Test_Collection(t *testing.T) {
-	ns := NoSQL{
-		storage: noSqlTestCases,
-	}
-
-	ch := Cache{
-		NoSQL: ns,
-	}
+	ch := Cache{}
 
 	col := ch.NoSql().Collection("user")
 	assert.NotNil(t, col)
@@ -36,13 +31,7 @@ func Test_Collection(t *testing.T) {
 }
 
 func Test_Insert(t *testing.T) {
-	ns := NoSQL{
-		storage: []interface{}{},
-	}
-
-	ch := Cache{
-		NoSQL: ns,
-	}
+	ch := Cache{}
 
 	var counter int
 	name := fmt.Sprintf("testCase_%v", counter+1)
@@ -61,13 +50,7 @@ func Test_Insert(t *testing.T) {
 }
 
 func Test_InsertMany(t *testing.T) {
-	ns := NoSQL{
-		storage: []interface{}{},
-	}
-
-	ch := Cache{
-		NoSQL: ns,
-	}
+	ch := Cache{}
 
 	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
 	if err != nil {
@@ -75,4 +58,27 @@ func Test_InsertMany(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
+}
+
+func Test_Find(t *testing.T) {
+	ch := Cache{}
+
+	// insert a new record
+	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.NoError(t, err)
+
+	// filter record out
+	filter := map[string]interface{}{
+		"age": 35.0,
+	}
+
+	result, err := ch.NoSql().Collection("users").Find(filter)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NotNil(t, result)
 }
