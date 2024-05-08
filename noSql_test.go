@@ -1,6 +1,7 @@
 package fscache
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -65,7 +66,7 @@ func Test_InsertMany(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func Test_Find(t *testing.T) {
+func Test_First(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
@@ -75,17 +76,45 @@ func Test_Find(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	// filter out record of age 35
-	filter := map[string]interface{}{
-		"age": 35.0,
+	filters := []map[string]interface{}{
+		{"age": 35.0}, // filter out records of age 35
+
+		nil, // for nil params
 	}
 
-	result, err := ch.NoSql().Collection("users").Find(filter).First()
-	if err != nil {
-		assert.Error(t, err)
+	for _, v := range filters {
+		var name string
+		if v == nil {
+			name = "nil params"
+		} else {
+			name = "not nil params"
+		}
+
+		t.Run(name, func(t *testing.T) {
+			result, err := ch.NoSql().Collection("users").Find(v).First()
+			if err != nil {
+				assert.Error(t, err)
+			}
+
+			if result == nil {
+				assert.Equal(t, errors.New("filter params cannot be nil"), err)
+			}
+		})
 	}
 
-	assert.NotNil(t, result)
+	// // filter out record of age 35
+	// filter := map[string]interface{}{
+	// 	"age": 35.0,
+	// }
+
+	// result, err := ch.NoSql().Collection("users").Find(filter).First()
+	// if err != nil {
+	// 	assert.Error(t, err)
+	// }
+
+	// if result == nil {
+	// 	assert.Equal(t, errors.New("filter params cannot be nil"), err)
+	// }
 }
 
 func Test_All(t *testing.T) {
@@ -98,15 +127,28 @@ func Test_All(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	// filter out records of age 35
-	filter := map[string]interface{}{
-		"age": 35.0,
+	filters := []map[string]interface{}{
+		{"age": 35.0}, // filter out records of age 35
+
+		nil, // for nil params
 	}
 
-	result, err := ch.NoSql().Collection("users").Find(filter).All()
-	if err != nil {
-		assert.Error(t, err)
+	for _, v := range filters {
+		var name string
+		if v == nil {
+			name = "nil params"
+		} else {
+			name = "not nil params"
+		}
+
+		t.Run(name, func(t *testing.T) {
+			result, err := ch.NoSql().Collection("users").Find(v).All()
+			if err != nil {
+				assert.Error(t, err)
+			}
+
+			assert.NotNil(t, result)
+		})
 	}
 
-	assert.NotNil(t, result)
 }

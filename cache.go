@@ -105,12 +105,12 @@ func (c *Cache) Debug() {
 	debug = true
 }
 
-// KeyValue returns KeyPair object
+// KeyValue returns methods for key-value pair storage
 func (c *Cache) KeyValuePair() *KeyPair {
 	return &c.KeyPair
 }
 
-// NoSql returns NoSql object
+// NoSql returns methods for noSql-like storage
 func (c *Cache) NoSql() *NoSQL {
 	return &NoSQL{
 		logger: c.NoSQL.logger,
@@ -124,10 +124,10 @@ func (c *Cache) NoSql() *NoSQL {
 // client.NoSQL.Collection(struct{}).InsertMany(struct{})
 
 // filter
-// client.NoSQL.Collection(struct{}).Find(map[string]interface{})
+// client.NoSQL.Collection(struct{}).Find(map[string]interface{}).First()
 
 // filter many
-// client.NoSQL.Collection(struct{}).FindMany([]map[string]interface{})
+// client.NoSQL.Collection(struct{}).Find(map[string]interface{}).All()
 
 // update
 // client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).Update(struct{})

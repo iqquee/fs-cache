@@ -114,9 +114,14 @@ func (c *Collection) InsertMany(arr interface{}) error {
 
 // Find returns data matching records from filter
 func (c *Collection) Find(filter map[string]interface{}) *Find {
-	objMaps, err := c.decodeMany(noSqlStorage)
-	if err != nil {
-		return nil
+	var objMaps []map[string]interface{}
+	var err error
+
+	if filter != nil {
+		objMaps, err = c.decodeMany(noSqlStorage)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return &Find{
@@ -128,6 +133,10 @@ func (c *Collection) Find(filter map[string]interface{}) *Find {
 
 // First is a method available in Find(), it returns the first matching record from the filter.
 func (f *Find) First() (map[string]interface{}, error) {
+	if f.objMaps == nil {
+		return nil, errors.New("filter params cannot be nil")
+	}
+
 	notFound := true
 	var foundObj map[string]interface{}
 	for _, item := range f.objMaps {
@@ -149,8 +158,22 @@ func (f *Find) First() (map[string]interface{}, error) {
 	return foundObj, nil
 }
 
-// All is a method available in Find(), it returns the all matching records from the filter.
+// All is a method available in Find(), it returns all the matching records from the filter.
 func (f *Find) All() ([]map[string]interface{}, error) {
+	if f.objMaps == nil {
+		var objMaps []map[string]interface{}
+		arrObj, err := json.Marshal(noSqlStorage)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(arrObj, &objMaps); err != nil {
+			return nil, err
+		}
+
+		return objMaps, nil
+	}
+
 	notFound := true
 	var foundObj []map[string]interface{}
 	for _, item := range f.objMaps {
@@ -169,6 +192,27 @@ func (f *Find) All() ([]map[string]interface{}, error) {
 	}
 
 	return foundObj, nil
+}
+
+func (f *Find) Delete() ([]map[string]interface{}, error) {
+	notFound := true
+	for index, item := range f.objMaps {
+		for key, val := range f.filter {
+			if item["colName"] == f.collectionName {
+				if v, ok := item[key]; ok && val == v {
+					notFound = false
+					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[:index+1])
+					break
+				}
+			}
+		}
+	}
+
+	if notFound {
+		return nil, errors.New("record not found")
+	}
+
+	return f.objMaps, nil
 }
 
 // decode decodes an interface{} into a map[string]interface{}
