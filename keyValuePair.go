@@ -106,11 +106,6 @@ func (kp *KeyPair) Size() int {
 	return len(kp.Storage)
 }
 
-// Debug() enables debug to get certain logs
-func (c *Cache) Debug() {
-	c.debug = true
-}
-
 // OverWrite() updates an already set value using it key
 func (kp *KeyPair) OverWrite(key string, value interface{}, duration ...time.Duration) error {
 	var isFound bool

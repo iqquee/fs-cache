@@ -16,14 +16,15 @@ var noSqlTestCases = []interface{}{
 		Age:  25,
 	},
 	map[string]interface{}{
-		"name": "john Doe",
-		"age":  35,
+		"name":    "john Dice",
+		"age":     35,
+		"colName": "users",
 	},
 }
 
 func Test_Collection(t *testing.T) {
 	ns := NoSQL{
-		storage: noSqlTestCases,
+		storage: []interface{}{},
 	}
 
 	ch := Cache{
@@ -75,4 +76,28 @@ func Test_InsertMany(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
+}
+
+func Test_Find(t *testing.T) {
+	ns := NoSQL{
+		storage: noSqlTestCases,
+	}
+
+	ch := Cache{
+		NoSQL: ns,
+	}
+
+	filter := map[string]interface{}{
+		"name": "Jane Dice",
+		"age":  35,
+	}
+
+	result, err := ch.NoSql().Collection("user").Find(filter)
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	fmt.Println(result)
+
+	assert.NotNil(t, result)
 }

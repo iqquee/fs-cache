@@ -1,6 +1,10 @@
 # fs-cache
 fs-cache provides a quick way to store and retrieve frequently accessed data, significantly enhancing your application performance and reducing database queries / API calls. It supports data caching with an optional params for expiration
 
+## Features
+- ### Key-value pair storage
+<!-- - ### NoSql-like storage -->
+
 ## Installation
 ```sh
 go get github.com/iqquee/fs-cache@latest

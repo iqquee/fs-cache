@@ -112,7 +112,7 @@ func TestDebug(t *testing.T) {
 	}
 
 	ch.Debug()
-	assert.EqualValues(t, true, ch.debug)
+	assert.EqualValues(t, true, debug)
 }
 
 func TestOverWrite(t *testing.T) {

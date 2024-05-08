@@ -8,6 +8,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var debug bool
+
 type (
 	// cacheData object
 	CacheData struct {
@@ -32,7 +34,7 @@ type (
 	// Cache object
 	Cache struct {
 		// debug enables debugging
-		debug   bool
+		// debug   bool
 		KeyPair KeyPair
 		NoSQL   NoSQL
 	}
@@ -50,7 +52,7 @@ type (
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
 	var keyValuePair []map[string]CacheData
-	var noSql []interface{}
+	// var noSql []interface{}
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 	kp := KeyPair{
@@ -59,8 +61,8 @@ func New() Operations {
 	}
 
 	noSQL := NoSQL{
-		logger:  logger,
-		storage: noSql,
+		logger: logger,
+		// storage: noSql,
 	}
 
 	ch := Cache{
@@ -72,14 +74,14 @@ func New() Operations {
 
 	// cron job set to run every 1 minute
 	c.AddFunc("*/1 * * * *", func() {
-		if ch.debug {
+		if debug {
 			logger.Info().Msg("cron job running...")
 		}
 		for i := 0; i < len(ch.KeyPair.Storage); i++ {
 			for _, value := range ch.KeyPair.Storage[i] {
 				currenctTime := time.Now()
 				if currenctTime.Before(value.Duration) {
-					if ch.debug {
+					if debug {
 						logger.Info().Msgf("data object [%v] got expired ", ch.KeyPair.Storage[i])
 					}
 					// take the data from off the array object
@@ -92,12 +94,17 @@ func New() Operations {
 	})
 
 	c.Start()
-	if ch.debug {
+	if debug {
 		logger.Info().Msgf("cron job entries ::: %v", c.Entries())
 	}
 
 	op := Operations(&ch)
 	return op
+}
+
+// Debug() enables debug to get certain logs
+func (c *Cache) Debug() {
+	debug = true
 }
 
 // KeyValue returns KeyPair object
@@ -107,7 +114,9 @@ func (c *Cache) KeyValuePair() *KeyPair {
 
 // NoSql returns NoSql object
 func (c *Cache) NoSql() *NoSQL {
-	return &c.NoSQL
+	return &NoSQL{
+		logger: c.NoSQL.logger,
+	}
 }
 
 // create
