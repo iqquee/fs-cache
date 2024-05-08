@@ -7,7 +7,7 @@ fs-cache provides a quick way to store and retrieve frequently accessed data, si
 
 ## Installation
 ```sh
-go get github.com/iqquee/fs-cache@latest
+go get github.com/iqquee/fs-cache@v1.0.0 
 ```
 ## Import
 ```sh
