@@ -25,6 +25,12 @@ type (
 
 	// Entry object
 	Entry struct{}
+	// Find object
+	Find struct {
+		objMaps        []map[string]interface{}
+		filter         map[string]interface{}
+		collectionName string
+	}
 )
 
 // Collection defines the collection(table) name to perform an operations on
@@ -106,27 +112,53 @@ func (c *Collection) InsertMany(arr interface{}) error {
 	return nil
 }
 
-// Find looks up a data by filter and returns matching record
-func (c *Collection) Find(filter map[string]interface{}) (interface{}, error) {
-	var objMaps []map[string]interface{}
-	arrObjs, err := json.Marshal(&noSqlStorage)
+// Find returns data matching records from filter
+func (c *Collection) Find(filter map[string]interface{}) *Find {
+	objMaps, err := c.decodeMany(noSqlStorage)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
-	if err := json.Unmarshal(arrObjs, &objMaps); err != nil {
-		return nil, err
+	return &Find{
+		objMaps:        objMaps,
+		filter:         filter,
+		collectionName: c.collectionName,
 	}
+}
 
+// First is a method available in Find(), it returns the first matching record from the filter.
+func (f *Find) First() (map[string]interface{}, error) {
 	notFound := true
 	var foundObj map[string]interface{}
-	for _, item := range objMaps {
-		for key, val := range filter {
-			if item["colName"] == c.collectionName {
+	for _, item := range f.objMaps {
+		for key, val := range f.filter {
+			if item["colName"] == f.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
 					foundObj = item
 					break
+				}
+			}
+		}
+	}
+
+	if notFound {
+		return nil, errors.New("record not found")
+	}
+
+	return foundObj, nil
+}
+
+// All is a method available in Find(), it returns the all matching records from the filter.
+func (f *Find) All() ([]map[string]interface{}, error) {
+	notFound := true
+	var foundObj []map[string]interface{}
+	for _, item := range f.objMaps {
+		for key, val := range f.filter {
+			if item["colName"] == f.collectionName {
+				if v, ok := item[key]; ok && val == v {
+					notFound = false
+					foundObj = append(foundObj, item)
 				}
 			}
 		}
