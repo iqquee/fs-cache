@@ -20,6 +20,11 @@ var noSqlTestCases = []interface{}{
 		"age":     35,
 		"colName": "users",
 	},
+	map[string]interface{}{
+		"name":    "Jane Dice",
+		"age":     35,
+		"colName": "users",
+	},
 }
 
 func Test_Collection(t *testing.T) {
@@ -70,12 +75,35 @@ func Test_Find(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	// filter record out
+	// filter out record of age 35
 	filter := map[string]interface{}{
 		"age": 35.0,
 	}
 
-	result, err := ch.NoSql().Collection("users").Find(filter)
+	result, err := ch.NoSql().Collection("users").Find(filter).First()
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NotNil(t, result)
+}
+
+func Test_All(t *testing.T) {
+	ch := Cache{}
+
+	// insert a new record
+	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.NoError(t, err)
+
+	// filter out records of age 35
+	filter := map[string]interface{}{
+		"age": 35.0,
+	}
+
+	result, err := ch.NoSql().Collection("users").Find(filter).All()
 	if err != nil {
 		assert.Error(t, err)
 	}
