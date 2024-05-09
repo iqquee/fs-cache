@@ -235,6 +235,7 @@ func (d *Delete) One() error {
 						break
 					} else {
 						noSqlStorage = noSqlStorage[:index]
+						break
 					}
 				}
 			}
