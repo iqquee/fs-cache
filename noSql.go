@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -12,8 +14,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// noSql storage instance
-var noSqlStorage []interface{}
+var (
+	// noSql storage instance
+	noSqlStorage []interface{}
+	// persistNosqlData to enable persistence of noSql data
+	persistNoSqlData bool
+)
 
 type (
 	// Collection object
@@ -43,7 +49,9 @@ type (
 	}
 
 	// Persist objects implemented Persist() used to persist inserted records
-	Persist struct{}
+	Persist struct {
+		Error error
+	}
 )
 
 // Collection defines the collection(table) name to perform an operations on
@@ -93,7 +101,7 @@ func (c *Collection) Insert(obj interface{}) *Insert {
 // One is a method available in Insert(). It adds a new record into the storage with collection name
 func (i *Insert) One() (interface{}, error) {
 	if i.obj == nil {
-		return nil, errors.New("insert() params cannot be nil")
+		return nil, errors.New("One() params cannot be nil")
 	}
 
 	t := reflect.TypeOf(i.obj)
@@ -110,35 +118,90 @@ func (i *Insert) One() (interface{}, error) {
 	objMap["colName"] = i.collection.collectionName
 	objMap["id"] = uuid.New()
 	objMap["createdAt"] = time.Now()
-	objMap["deletedAt"] = nil
+	objMap["updatedAt"] = nil
 
 	noSqlStorage = append(noSqlStorage, objMap)
 	return objMap, nil
 }
 
 // Many is a method available in Insert(). It adds many records into the storage at once
-func (i *Insert) Many(arr interface{}) error {
+func (i *Insert) Many(arr interface{}) ([]interface{}, error) {
 	if i.obj != nil {
-		return errors.New("insert() params must be nil to insert Many")
+		return nil, errors.New("Many() params must be nil to insert Many")
 	}
 
 	t := reflect.TypeOf(arr)
 
 	if t.Kind() != reflect.Slice {
-		return errors.New("function param must be a [slice]")
+		return nil, errors.New("function param must be a [slice]")
 	}
 
 	arrObjs, err := i.collection.decodeMany(arr)
 	if err != nil {
+		return nil, err
+	}
+
+	var savedData []interface{}
+	for _, obj := range arrObjs {
+		saved, err := i.collection.Insert(obj).One()
+		if err != nil {
+			return nil, err
+		}
+
+		savedData = append(savedData, saved)
+	}
+
+	return savedData, nil
+}
+
+// FromJsonFile is a method available in Insert(). It adds records into the storage from a json file
+func (i *Insert) FromJsonFile(fileLocation string) error {
+	if i.obj != nil {
+		return errors.New("FromFile() params must be nil to insert from file")
+	}
+
+	f, err := os.Open(fileLocation)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	fileByte, err := io.ReadAll(f)
+	if err != nil {
 		return err
 	}
 
-	for _, obj := range arrObjs {
-		if _, err := i.collection.Insert(obj).One(); err != nil {
-			return err
-		}
+	var obj interface{}
+	if err := json.Unmarshal(fileByte, &obj); err != nil {
+		return errors.New("invalid json file")
 	}
 
+	t := reflect.TypeOf(obj)
+	if t.Kind() == reflect.Slice {
+		objMap, err := i.collection.decodeMany(obj)
+		if err != nil {
+			return nil
+		}
+
+		_, err = i.collection.Insert(nil).Many(objMap)
+		if err != nil {
+			return nil
+		}
+	} else if t.Kind() == reflect.Map {
+		objMap, err := i.collection.decode(obj)
+		if err != nil {
+			return nil
+		}
+
+		_, err = i.collection.Insert(objMap).One()
+		if err != nil {
+			return nil
+		}
+	} else {
+		return errors.New("file must contain either an array of [objects ::: slice] or [object ::: map]")
+	}
+
+	fmt.Println("Storage", noSqlStorage)
 	return nil
 }
 
@@ -302,6 +365,32 @@ func (d *Delete) All() error {
 
 	if notFound {
 		return errors.New("record not found")
+	}
+
+	return nil
+}
+
+// Persist is used to write data to file. All datas will be saved into a json file.
+func (n *NoSQL) Persist() error {
+	if noSqlStorage == nil {
+		return nil
+	}
+
+	persistNoSqlData = true
+	jsonByte, err := json.Marshal(noSqlStorage)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create("noSqlSorage.json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(jsonByte)
+	if err != nil {
+		return err
 	}
 
 	return nil

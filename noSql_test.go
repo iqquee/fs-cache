@@ -58,24 +58,70 @@ func Test_Insert_One(t *testing.T) {
 func Test_Insert_Many(t *testing.T) {
 	ch := Cache{}
 
-	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
 
-	assert.NoError(t, err)
+	assert.NotNil(t, res)
+}
+
+func Test_Insert_FromJsonFile(t *testing.T) {
+	ch := Cache{}
+
+	testCases := []struct {
+		fileName      string
+		expectedError error
+		name          string
+		message       string
+	}{
+		{
+			fileName:      "./testJsonFiles/objects.json",
+			name:          "objects [slice] file",
+			expectedError: nil,
+			message:       "success",
+		},
+		{
+			fileName:      "./testJsonFiles/object.json",
+			name:          "object [map] file",
+			expectedError: nil,
+			message:       "success",
+		},
+		{
+			fileName:      "./testJsonFiles/string.json",
+			name:          "[string] file",
+			expectedError: errors.New("file must contain either an array of [objects ::: slice] or [object ::: map]"),
+			message:       "fail",
+		},
+		{
+			fileName:      "./testJsonFiles/empty.json",
+			name:          "[empty] file",
+			expectedError: errors.New("invalid json file"),
+			message:       "fail",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := ch.NoSql().Collection("user").Insert(nil).FromJsonFile(testCase.fileName)
+			if testCase.message != "success" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else {
+				assert.Equal(t, testCase.expectedError, err)
+			}
+		})
+	}
 }
 
 func Test__Filter_First(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new records
-	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
-	assert.NoError(t, err)
-
+	assert.NotNil(t, res)
 	filters := []map[string]interface{}{
 		{"age": 35.0}, // filter out records of age 35
 
@@ -107,12 +153,11 @@ func Test_Filter_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new records
-	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
-	assert.NoError(t, err)
-
+	assert.NotNil(t, res)
 	filters := []map[string]interface{}{
 		{"age": 35.0}, // filter out records of age 35
 
@@ -142,11 +187,11 @@ func Test_Delete_One(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
-	assert.NoError(t, err)
+	assert.NotNil(t, res)
 
 	filters := []map[string]interface{}{
 		{"age": 35.0}, // filter out record of age 35
@@ -176,11 +221,11 @@ func Test_Delete_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
-	assert.NoError(t, err)
+	assert.NotNil(t, res)
 
 	filters := []map[string]interface{}{
 		{"age": 35.0}, // filter out records of age 35
