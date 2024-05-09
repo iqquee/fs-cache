@@ -66,7 +66,7 @@ func Test_InsertMany(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func Test_First(t *testing.T) {
+func Test__Filter_First(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
@@ -91,7 +91,7 @@ func Test_First(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
-			result, err := ch.NoSql().Collection("users").Find(v).First()
+			result, err := ch.NoSql().Collection("users").Filter(v).First()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -101,23 +101,9 @@ func Test_First(t *testing.T) {
 			}
 		})
 	}
-
-	// // filter out record of age 35
-	// filter := map[string]interface{}{
-	// 	"age": 35.0,
-	// }
-
-	// result, err := ch.NoSql().Collection("users").Find(filter).First()
-	// if err != nil {
-	// 	assert.Error(t, err)
-	// }
-
-	// if result == nil {
-	// 	assert.Equal(t, errors.New("filter params cannot be nil"), err)
-	// }
 }
 
-func Test_All(t *testing.T) {
+func Test_Filter_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
@@ -142,7 +128,7 @@ func Test_All(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
-			result, err := ch.NoSql().Collection("users").Find(v).All()
+			result, err := ch.NoSql().Collection("users").Filter(v).All()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -150,5 +136,70 @@ func Test_All(t *testing.T) {
 			assert.NotNil(t, result)
 		})
 	}
+}
 
+func Test_Delete_One(t *testing.T) {
+	ch := Cache{}
+
+	// insert a new record
+	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.NoError(t, err)
+
+	filters := []map[string]interface{}{
+		{"age": 35.0}, // filter out record of age 35
+
+		nil, // for nil params
+	}
+
+	for _, v := range filters {
+		var name string
+		if v == nil {
+			name = "nil params"
+		} else {
+			name = "not nil params"
+		}
+
+		t.Run(name, func(t *testing.T) {
+			err := ch.NoSql().Collection("users").Delete(v).One()
+			if err != nil {
+				assert.Error(t, err)
+			}
+
+		})
+	}
+}
+
+func Test_Delete_All(t *testing.T) {
+	ch := Cache{}
+
+	// insert a new record
+	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.NoError(t, err)
+
+	filters := []map[string]interface{}{
+		{"age": 35.0}, // filter out records of age 35
+		nil,           // for nil params
+	}
+
+	for _, v := range filters {
+		var name string
+		if v == nil {
+			name = "nil params"
+		} else {
+			name = "not nil params"
+		}
+
+		t.Run(name, func(t *testing.T) {
+			err := ch.NoSql().Collection("users").Delete(v).All()
+			if err != nil {
+				assert.Error(t, err)
+			}
+		})
+	}
 }

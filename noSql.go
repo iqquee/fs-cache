@@ -23,10 +23,14 @@ type (
 		// storage        []interface{}
 	}
 
-	// Entry object
-	Entry struct{}
-	// Find object
-	Find struct {
+	// Filter object
+	Filter struct {
+		objMaps        []map[string]interface{}
+		filter         map[string]interface{}
+		collectionName string
+	}
+
+	Delete struct {
 		objMaps        []map[string]interface{}
 		filter         map[string]interface{}
 		collectionName string
@@ -112,8 +116,8 @@ func (c *Collection) InsertMany(arr interface{}) error {
 	return nil
 }
 
-// Find returns data matching records from filter
-func (c *Collection) Find(filter map[string]interface{}) *Find {
+// Filter returns data matching records from filter
+func (c *Collection) Filter(filter map[string]interface{}) *Filter {
 	var objMaps []map[string]interface{}
 	var err error
 
@@ -124,15 +128,15 @@ func (c *Collection) Find(filter map[string]interface{}) *Find {
 		}
 	}
 
-	return &Find{
+	return &Filter{
 		objMaps:        objMaps,
 		filter:         filter,
 		collectionName: c.collectionName,
 	}
 }
 
-// First is a method available in Find(), it returns the first matching record from the filter.
-func (f *Find) First() (map[string]interface{}, error) {
+// First is a method available in Filter(), it returns the first matching record from the filter.
+func (f *Filter) First() (map[string]interface{}, error) {
 	if f.objMaps == nil {
 		return nil, errors.New("filter params cannot be nil")
 	}
@@ -158,8 +162,8 @@ func (f *Find) First() (map[string]interface{}, error) {
 	return foundObj, nil
 }
 
-// All is a method available in Find(), it returns all the matching records from the filter.
-func (f *Find) All() ([]map[string]interface{}, error) {
+// All is a method available in Filter(), it returns all the matching records from the filter.
+func (f *Filter) All() ([]map[string]interface{}, error) {
 	if f.objMaps == nil {
 		var objMaps []map[string]interface{}
 		arrObj, err := json.Marshal(noSqlStorage)
@@ -194,14 +198,38 @@ func (f *Find) All() ([]map[string]interface{}, error) {
 	return foundObj, nil
 }
 
-func (f *Find) Delete() ([]map[string]interface{}, error) {
+// Delete returns data matching records from filter
+func (c *Collection) Delete(filter map[string]interface{}) *Delete {
+	var objMaps []map[string]interface{}
+	var err error
+
+	if filter != nil {
+		objMaps, err = c.decodeMany(noSqlStorage)
+		if err != nil {
+			return nil
+		}
+	}
+
+	return &Delete{
+		objMaps:        objMaps,
+		filter:         filter,
+		collectionName: c.collectionName,
+	}
+}
+
+// One is a method available in Delete(), it returns and error if any.
+func (d *Delete) One() error {
+	if d.objMaps == nil {
+		return errors.New("filter params cannot be nil")
+	}
+
 	notFound := true
-	for index, item := range f.objMaps {
-		for key, val := range f.filter {
-			if item["colName"] == f.collectionName {
+	for index, item := range d.objMaps {
+		for key, val := range d.filter {
+			if item["colName"] == d.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
-					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[:index+1])
+					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index:]...)
 					break
 				}
 			}
@@ -209,11 +237,64 @@ func (f *Find) Delete() ([]map[string]interface{}, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("record not found")
+		return errors.New("record not found")
 	}
 
-	return f.objMaps, nil
+	return nil
 }
+
+// All is a method available in Delete(), it returns all the matching records from the filter.
+func (d *Delete) All() error {
+	if d.objMaps == nil {
+		return errors.New("filter params cannot be nil")
+	}
+
+	notFound := true
+	for index, item := range d.objMaps {
+		for key, val := range d.filter {
+			if item["colName"] == d.collectionName {
+				if v, ok := item[key]; ok && val == v {
+					notFound = false
+					fmt.Println("Delected: ", item)
+					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+				}
+			}
+		}
+	}
+
+	if notFound {
+		return errors.New("record not found")
+	}
+
+	return nil
+}
+
+// Many is a method available in Delete(), it returns all the matching records from the filter.
+// func (d *Delete) Many() error {
+// 	if d.objMaps == nil {
+// 		// clear everything in the array
+// 		noSqlStorage = noSqlStorage[:0]
+// 		return nil
+// 	}
+
+// 	notFound := true
+// 	for index, item := range d.objMaps {
+// 		for key, val := range d.filter {
+// 			if item["colName"] == d.collectionName {
+// 				if v, ok := item[key]; ok && val == v {
+// 					notFound = false
+// 					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[:index+1])
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	if notFound {
+// 		return errors.New("record not found")
+// 	}
+
+// 	return nil
+// }
 
 // decode decodes an interface{} into a map[string]interface{}
 func (c *Collection) decode(obj interface{}) (map[string]interface{}, error) {

@@ -215,7 +215,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Find(filter).First()
+result, err := fs.NoSql().Collection(User{}).Filter(filter).First()
 if err != nil {
 	fmt.Println(err)
 }
@@ -233,7 +233,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Find(filter).All()
+result, err := fs.NoSql().Collection(User{}).Filter(filter).All()
 if err != nil {
 	fmt.Println(err)
 }
