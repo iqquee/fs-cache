@@ -36,14 +36,14 @@ func Test_Collection(t *testing.T) {
 	assert.Equal(t, "users", col.collectionName)
 }
 
-func Test_Insert(t *testing.T) {
+func Test_Insert_One(t *testing.T) {
 	ch := Cache{}
 
 	var counter int
 	name := fmt.Sprintf("testCase_%v", counter+1)
 	for _, v := range noSqlTestCases {
 		t.Run(name, func(t *testing.T) {
-			res, err := ch.NoSql().Collection("user").Insert(v)
+			res, err := ch.NoSql().Collection("user").Insert(v).One()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -55,10 +55,10 @@ func Test_Insert(t *testing.T) {
 	}
 }
 
-func Test_InsertMany(t *testing.T) {
+func Test_Insert_Many(t *testing.T) {
 	ch := Cache{}
 
-	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -69,8 +69,8 @@ func Test_InsertMany(t *testing.T) {
 func Test__Filter_First(t *testing.T) {
 	ch := Cache{}
 
-	// insert a new record
-	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	// insert a new records
+	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -106,8 +106,8 @@ func Test__Filter_First(t *testing.T) {
 func Test_Filter_All(t *testing.T) {
 	ch := Cache{}
 
-	// insert a new record
-	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	// insert a new records
+	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -142,7 +142,7 @@ func Test_Delete_One(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -176,7 +176,7 @@ func Test_Delete_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	err := ch.NoSql().Collection("user").InsertMany(noSqlTestCases)
+	err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}

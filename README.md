@@ -45,10 +45,13 @@ if err != nil {
 fmt.Println("key1:", result)
 ```
 
-## NoSql-like Storage
+# NoSql-like storage
 
 ### Insert()
-Insert adds a new record into the storage with collection name
+Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
+
+- ### One
+One adds a new record into the storage with collection name
 ```go
 type User struct {
 	Name string `json:"name"`
@@ -62,12 +65,15 @@ var user User
 user.Name = "jane doe" 
 user.Age = 20
 
-if err := fs.NoSql().Collection(User{}).Insert(user); err != nil {
+res, err := fs.NoSql().Collection(User{}).Insert(user).One
+if err != nil {
 	fmt.Println(err)
 }
+
+fmt.Println(res)
 ```
-### InsertMany()
-InsertMany adds many records into the storage at once
+- ### Many()
+Many adds many records into the storage at once
 ```go
 fs := fscache.New()
 
@@ -81,12 +87,14 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.NoSql().Collection("user").InsertMany(users); err != nil {
+if err := fs.NoSql().Collection("user").Insert(nil).Many(users); err != nil {
 	fmt.Println(err)
 }
 ```
 
 ### Filter()
+Filter is used to filter records from the storage. It has two methods which are First() and All().
+
 - ### First()
 First is a method available in Filter(), it returns the first matching record from the filter.
 ```go
@@ -110,17 +118,25 @@ All is a method available in Filter(), it returns the all matching records from 
 ```go
 fs := fscache.New()
 
-// filter out records of age 35
+// filter out record of age 35
 filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+// to get all records with matching filter from the storage
+matchingRecords, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+if err != nil {
+	fmt.Println(err)
+}
+fmt.Println(matchingRecords)
+
+// to get all records from the collection from the storage
+allRecords, err := fs.NoSql().Collection(User{}).Filter(nil).All()
 if err != nil {
 	fmt.Println(err)
 }
 
-fmt.Println(result)
+fmt.Println(allRecords)
 ```
 
 For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example)
