@@ -49,10 +49,10 @@ fmt.Println("key1:", result)
 ### Persist()
 Persist is used to write data to file. All datas will be saved into a json file.
 
+This method will make sure all your your data's are saved. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
 ```go
 fs := fscache.New()
 
-// calling this method will make sure all your your data's are saved. A cronJon runs ever minute and writes your datas into a json file to ensure data integrity
 if err := fs.NoSql().Persist(); err != nil {
 	fmt.Println(err)
 }
