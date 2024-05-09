@@ -46,6 +46,17 @@ fmt.Println("key1:", result)
 ```
 
 # NoSql-like storage
+### Persist()
+Persist is used to write data to file. All datas will be saved into a json file.
+
+```go
+fs := fscache.New()
+
+// calling this method will make sure all your your data's are saved. A cronJon runs ever minute and writes your datas into a json file to ensure data integrity
+if err := fs.NoSql().Persist(); err != nil {
+	fmt.Println(err)
+}
+```
 
 ### Insert()
 Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
@@ -88,6 +99,15 @@ var users = []struct {
 }
 
 if err := fs.NoSql().Collection("user").Insert(nil).Many(users); err != nil {
+	fmt.Println(err)
+}
+```
+- ### FromJsonFile()
+FromJsonFile is a method available in Insert(). It adds record(s) into the storage from a json file
+```go
+fs := fscache.New()
+
+if err := fs.NoSql().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -138,6 +158,7 @@ if err != nil {
 
 fmt.Println(allRecords)
 ```
+
 
 For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example)
 

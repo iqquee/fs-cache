@@ -8,7 +8,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var debug bool
+var (
+	debug bool
+)
 
 type (
 	// cacheData object
@@ -75,6 +77,15 @@ func New() Operations {
 		if debug {
 			logger.Info().Msg("cron job running...")
 		}
+
+		if persistNoSqlData {
+			if err := ch.NoSQL.Persist(); err != nil {
+				if debug {
+					logger.Info().Msgf("persist error: %v", err)
+				}
+			}
+		}
+
 		for i := 0; i < len(ch.KeyPair.Storage); i++ {
 			for _, value := range ch.KeyPair.Storage[i] {
 				currenctTime := time.Now()
