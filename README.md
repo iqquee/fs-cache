@@ -86,9 +86,9 @@ if err := fs.NoSql().Collection("user").InsertMany(users); err != nil {
 }
 ```
 
-### Find()
+### Filter()
 - ### First()
-First is a method available in Find(), it returns the first matching record from the filter.
+First is a method available in Filter(), it returns the first matching record from the filter.
 ```go
 fs := fscache.New()
 
@@ -97,7 +97,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Find(filter).First()
+result, err := fs.NoSql().Collection(User{}).Filter(filter).First()
 if err != nil {
 	fmt.Println(err)
 }
@@ -106,7 +106,7 @@ fmt.Println(result)
 ```
 
 - ### All()
-All is a method available in Find(), it returns the all matching records from the filter.
+All is a method available in Filter(), it returns the all matching records from the filter.
 ```go
 fs := fscache.New()
 
@@ -115,7 +115,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Find(filter).All()
+result, err := fs.NoSql().Collection(User{}).Filter(filter).All()
 if err != nil {
 	fmt.Println(err)
 }
