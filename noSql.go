@@ -229,8 +229,14 @@ func (d *Delete) One() error {
 			if item["colName"] == d.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
-					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index:]...)
-					break
+					if index < (len(noSqlStorage) - 1) {
+						noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+						index--
+						break
+					} else {
+						noSqlStorage = noSqlStorage[:index]
+						break
+					}
 				}
 			}
 		}
@@ -246,7 +252,8 @@ func (d *Delete) One() error {
 // All is a method available in Delete(), it returns all the matching records from the filter.
 func (d *Delete) All() error {
 	if d.objMaps == nil {
-		return errors.New("filter params cannot be nil")
+		noSqlStorage = noSqlStorage[:0]
+		return nil
 	}
 
 	notFound := true
@@ -256,7 +263,12 @@ func (d *Delete) All() error {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
 					fmt.Println("Delected: ", item)
-					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+					if index < (len(noSqlStorage) - 1) {
+						noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+						index--
+					} else {
+						noSqlStorage = noSqlStorage[:index]
+					}
 				}
 			}
 		}
@@ -268,6 +280,8 @@ func (d *Delete) All() error {
 
 	return nil
 }
+
+// TODO make all() to return only datas in set collection
 
 // Many is a method available in Delete(), it returns all the matching records from the filter.
 // func (d *Delete) Many() error {
