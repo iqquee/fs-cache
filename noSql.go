@@ -20,21 +20,30 @@ type (
 	Collection struct {
 		logger         zerolog.Logger
 		collectionName string
-		// storage        []interface{}
 	}
 
-	// Filter object
+	// Insert object implementes One() and Many() to insert new records
+	Insert struct {
+		obj        interface{}
+		collection Collection
+	}
+
+	// Filter object implementes One() and All()
 	Filter struct {
 		objMaps        []map[string]interface{}
 		filter         map[string]interface{}
 		collectionName string
 	}
 
+	// Delete object implementes One() and All()
 	Delete struct {
 		objMaps        []map[string]interface{}
 		filter         map[string]interface{}
 		collectionName string
 	}
+
+	// Persist objects implemented Persist() used to persist inserted records
+	Persist struct{}
 )
 
 // Collection defines the collection(table) name to perform an operations on
@@ -70,24 +79,35 @@ func (ns *NoSQL) Collection(col interface{}) *Collection {
 	return &Collection{
 		logger:         ns.logger,
 		collectionName: colName,
-		// storage:        ns.storage,
 	}
 }
 
-// Insert adds a new record into the storage with collection name
-func (c *Collection) Insert(obj interface{}) (interface{}, error) {
-	t := reflect.TypeOf(obj)
+// Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
+func (c *Collection) Insert(obj interface{}) *Insert {
+	return &Insert{
+		obj:        obj,
+		collection: *c,
+	}
+}
 
-	if t.Kind() != reflect.Struct && t.Kind() != reflect.Map {
-		return nil, errors.New("function param must either be a [map] or a [struct]")
+// One is a method available in Insert(). It adds a new record into the storage with collection name
+func (i *Insert) One() (interface{}, error) {
+	if i.obj == nil {
+		return nil, errors.New("insert() params cannot be nil")
 	}
 
-	objMap, err := c.decode(obj)
+	t := reflect.TypeOf(i.obj)
+
+	if t.Kind() != reflect.Struct && t.Kind() != reflect.Map {
+		return nil, errors.New("insert() param must either be a [map] or a [struct]")
+	}
+
+	objMap, err := i.collection.decode(i.obj)
 	if err != nil {
 		return nil, err
 	}
 
-	objMap["colName"] = c.collectionName
+	objMap["colName"] = i.collection.collectionName
 	objMap["id"] = uuid.New()
 	objMap["createdAt"] = time.Now()
 	objMap["deletedAt"] = nil
@@ -96,27 +116,33 @@ func (c *Collection) Insert(obj interface{}) (interface{}, error) {
 	return objMap, nil
 }
 
-// InsertMany adds many record into the storage at once
-func (c *Collection) InsertMany(arr interface{}) error {
+// Many is a method available in Insert(). It adds many records into the storage at once
+func (i *Insert) Many(arr interface{}) error {
+	if i.obj != nil {
+		return errors.New("insert() params must be nil to insert Many")
+	}
+
 	t := reflect.TypeOf(arr)
 
 	if t.Kind() != reflect.Slice {
 		return errors.New("function param must be a [slice]")
 	}
 
-	arrObjs, err := c.decodeMany(arr)
+	arrObjs, err := i.collection.decodeMany(arr)
 	if err != nil {
 		return err
 	}
 
 	for _, obj := range arrObjs {
-		c.Insert(obj)
+		if _, err := i.collection.Insert(obj).One(); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// Filter returns data matching records from filter
+// Filter is used to filter records from the storage. It has two methods which are First() and All().
 func (c *Collection) Filter(filter map[string]interface{}) *Filter {
 	var objMaps []map[string]interface{}
 	var err error
@@ -198,7 +224,7 @@ func (f *Filter) All() ([]map[string]interface{}, error) {
 	return foundObj, nil
 }
 
-// Delete returns data matching records from filter
+// Delete is used to delete a new record from the storage. It has two methods which are One() and Many().
 func (c *Collection) Delete(filter map[string]interface{}) *Delete {
 	var objMaps []map[string]interface{}
 	var err error
@@ -217,7 +243,7 @@ func (c *Collection) Delete(filter map[string]interface{}) *Delete {
 	}
 }
 
-// One is a method available in Delete(), it returns and error if any.
+// One is a method available in Delete(), it deletes a record and returns an error if any.
 func (d *Delete) One() error {
 	if d.objMaps == nil {
 		return errors.New("filter params cannot be nil")
@@ -249,7 +275,7 @@ func (d *Delete) One() error {
 	return nil
 }
 
-// All is a method available in Delete(), it returns all the matching records from the filter.
+// All is a method available in Delete(), it deletes matching records from the filter and returns an error if any.
 func (d *Delete) All() error {
 	if d.objMaps == nil {
 		noSqlStorage = noSqlStorage[:0]
@@ -280,35 +306,6 @@ func (d *Delete) All() error {
 
 	return nil
 }
-
-// TODO make all() to return only datas in set collection
-
-// Many is a method available in Delete(), it returns all the matching records from the filter.
-// func (d *Delete) Many() error {
-// 	if d.objMaps == nil {
-// 		// clear everything in the array
-// 		noSqlStorage = noSqlStorage[:0]
-// 		return nil
-// 	}
-
-// 	notFound := true
-// 	for index, item := range d.objMaps {
-// 		for key, val := range d.filter {
-// 			if item["colName"] == d.collectionName {
-// 				if v, ok := item[key]; ok && val == v {
-// 					notFound = false
-// 					noSqlStorage = append(noSqlStorage[:index], noSqlStorage[:index+1])
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	if notFound {
-// 		return errors.New("record not found")
-// 	}
-
-// 	return nil
-// }
 
 // decode decodes an interface{} into a map[string]interface{}
 func (c *Collection) decode(obj interface{}) (map[string]interface{}, error) {

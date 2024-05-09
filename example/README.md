@@ -165,8 +165,12 @@ fmt.Println("keyValuePairs: ", keyValuePairs)
 ```
 
 # NoSql-like storage
+
 ### Insert()
-// Insert adds a new record into the storage with collection name
+Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
+
+- ### One
+One adds a new record into the storage with collection name
 ```go
 type User struct {
 	Name string `json:"name"`
@@ -180,12 +184,15 @@ var user User
 user.Name = "jane doe" 
 user.Age = 20
 
-if err := fs.NoSql().Collection(User{}).Insert(user); err != nil {
+res, err := fs.NoSql().Collection(User{}).Insert(user).One
+if err != nil {
 	fmt.Println(err)
 }
+
+fmt.Println(res)
 ```
-### InsertMany()
-// InsertMany adds many records into the storage at once
+- ### Many()
+Many adds many records into the storage at once
 ```go
 fs := fscache.New()
 
@@ -199,14 +206,16 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.NoSql().Collection("user").InsertMany(users); err != nil {
+if err := fs.NoSql().Collection("user").Insert(nil).Many(users); err != nil {
 	fmt.Println(err)
 }
 ```
 
-### Find()
+### Filter()
+Filter is used to filter records from the storage. It has two methods which are First() and All().
+
 - ### First()
-// First is a method available in Find(), it returns the first matching record from the filter.
+First is a method available in Filter(), it returns the first matching record from the filter.
 ```go
 fs := fscache.New()
 
@@ -224,7 +233,7 @@ fmt.Println(result)
 ```
 
 - ### All()
-// All is a method available in Find(), it returns the all matching records from the filter.
+All is a method available in Filter(), it returns the all matching records from the filter.
 ```go
 fs := fscache.New()
 
@@ -233,10 +242,60 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+// to get all records with matching filter from the storage
+matchingRecords, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+if err != nil {
+	fmt.Println(err)
+}
+fmt.Println(matchingRecords)
+
+// to get all records from the collection from the storage
+allRecords, err := fs.NoSql().Collection(User{}).Filter(nil).All()
 if err != nil {
 	fmt.Println(err)
 }
 
-fmt.Println(result)
+fmt.Println(allRecords)
+```
+
+### Delete()
+Delete is used to delete a new record from the storage. It has two methods which are One() and Many().
+
+- ### One
+One is a method available in Delete(), it deletes a record and returns an error if any.
+```go
+type User struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+```
+```go
+fs := fscache.New()
+
+filter := map[string]interface{}{
+	"age": 20.0,
+}
+
+if err := fs.NoSql().Collection("user").Delete(filter).One(); err != nil {
+	fmt.Println(err)
+}
+```
+- ### Many()
+Many adds many records into the storage at once
+```go
+fs := fscache.New()
+
+filter := map[string]interface{}{
+	"age": 20.0,
+}
+
+// to delete all records with matching filter from the storage
+if err := fs.NoSql().Collection("user").Delete(filter).All(); err != nil {
+	fmt.Println(err)
+}
+
+// to delete all records in the collection from the storage
+if err := fs.NoSql().Collection("user").Delete(nil).All(); err != nil {
+	fmt.Println(err)
+}
 ```
