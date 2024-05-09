@@ -110,7 +110,7 @@ All is a method available in Filter(), it returns the all matching records from 
 ```go
 fs := fscache.New()
 
-// filter out record of age 35
+// filter out records of age 35
 filter := map[string]interface{}{
 	"age": 35.0,
 }
