@@ -36,21 +36,29 @@ type (
 
 	// Filter object implementes One() and All()
 	Filter struct {
-		objMaps        []map[string]interface{}
-		filter         map[string]interface{}
-		collectionName string
+		objMaps    []map[string]interface{}
+		filter     map[string]interface{}
+		collection Collection
 	}
 
 	// Delete object implementes One() and All()
 	Delete struct {
-		objMaps        []map[string]interface{}
-		filter         map[string]interface{}
-		collectionName string
+		objMaps    []map[string]interface{}
+		filter     map[string]interface{}
+		collection Collection
 	}
 
 	// Persist objects implemented Persist() used to persist inserted records
 	Persist struct {
 		Error error
+	}
+
+	// Update object implementes One() and All()
+	Update struct {
+		objMaps    []map[string]interface{}
+		filter     map[string]interface{}
+		update     map[string]interface{}
+		collection Collection
 	}
 )
 
@@ -201,7 +209,6 @@ func (i *Insert) FromJsonFile(fileLocation string) error {
 		return errors.New("file must contain either an array of [objects ::: slice] or [object ::: map]")
 	}
 
-	fmt.Println("Storage", noSqlStorage)
 	return nil
 }
 
@@ -218,9 +225,9 @@ func (c *Collection) Filter(filter map[string]interface{}) *Filter {
 	}
 
 	return &Filter{
-		objMaps:        objMaps,
-		filter:         filter,
-		collectionName: c.collectionName,
+		objMaps:    objMaps,
+		filter:     filter,
+		collection: *c,
 	}
 }
 
@@ -232,12 +239,16 @@ func (f *Filter) First() (map[string]interface{}, error) {
 
 	notFound := true
 	var foundObj map[string]interface{}
+	counter := 0
 	for _, item := range f.objMaps {
 		for key, val := range f.filter {
-			if item["colName"] == f.collectionName {
+			if item["colName"] == f.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
-					notFound = false
-					foundObj = item
+					if counter < 1 {
+						notFound = false
+						foundObj = item
+						counter++
+					}
 					break
 				}
 			}
@@ -271,7 +282,7 @@ func (f *Filter) All() ([]map[string]interface{}, error) {
 	var foundObj []map[string]interface{}
 	for _, item := range f.objMaps {
 		for key, val := range f.filter {
-			if item["colName"] == f.collectionName {
+			if item["colName"] == f.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
 					foundObj = append(foundObj, item)
@@ -300,9 +311,9 @@ func (c *Collection) Delete(filter map[string]interface{}) *Delete {
 	}
 
 	return &Delete{
-		objMaps:        objMaps,
-		filter:         filter,
-		collectionName: c.collectionName,
+		objMaps:    objMaps,
+		filter:     filter,
+		collection: *c,
 	}
 }
 
@@ -315,7 +326,7 @@ func (d *Delete) One() error {
 	notFound := true
 	for index, item := range d.objMaps {
 		for key, val := range d.filter {
-			if item["colName"] == d.collectionName {
+			if item["colName"] == d.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
 					if index < (len(noSqlStorage) - 1) {
@@ -348,7 +359,7 @@ func (d *Delete) All() error {
 	notFound := true
 	for index, item := range d.objMaps {
 		for key, val := range d.filter {
-			if item["colName"] == d.collectionName {
+			if item["colName"] == d.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
 					fmt.Println("Delected: ", item)
@@ -370,7 +381,110 @@ func (d *Delete) All() error {
 	return nil
 }
 
-// Persist is used to write data to file. All datas will be saved into a json file.
+// Update is used to update a existing record in the storage. It has a method which is One().
+func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
+	var objMaps []map[string]interface{}
+	var err error
+
+	if filter != nil {
+		objMaps, err = c.decodeMany(noSqlStorage)
+		if err != nil {
+			return nil
+		}
+	}
+
+	return &Update{
+		objMaps:    objMaps,
+		filter:     filter,
+		update:     obj,
+		collection: *c,
+	}
+}
+
+// One is a method available in Update(), it updates matching records from the filter, makes the necessry updated and returns an error if any.
+func (u *Update) One() error {
+	if u.objMaps == nil {
+		return errors.New("filter params cannot be nil")
+	}
+
+	notFound := true
+	counter := 0
+	for index, item := range u.objMaps {
+		for key, val := range u.filter {
+			if item["colName"] == u.collection.collectionName {
+				if v, ok := item[key]; ok && val == v {
+					notFound = false
+					if counter < 1 {
+						for _, updateValue := range u.update {
+							item[key] = updateValue
+							counter++
+							break
+						}
+					}
+					noSqlStorage[index] = item
+				}
+			}
+		}
+	}
+
+	if notFound {
+		return errors.New("record not found")
+	}
+
+	return nil
+}
+
+// LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
+func (n *NoSQL) LoadDefault() error {
+	f, err := os.Open("./noSqlSorage.json")
+	if err != nil {
+		return errors.New("error finding file")
+	}
+	defer f.Close()
+
+	fileByte, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	var obj interface{}
+	if err := json.Unmarshal(fileByte, &obj); err != nil {
+		return errors.New("invalid json file")
+	}
+
+	t := reflect.TypeOf(obj)
+	if t.Kind() == reflect.Slice {
+		var objMap []interface{}
+		jsonByte, err := json.Marshal(obj)
+		if err != nil {
+			return err
+		}
+
+		if err := json.Unmarshal(jsonByte, &objMap); err != nil {
+			return err
+		}
+
+		noSqlStorage = append(noSqlStorage, objMap...)
+	} else if t.Kind() == reflect.Map {
+		var objMap interface{}
+		jsonByte, err := json.Marshal(obj)
+		if err != nil {
+			return err
+		}
+
+		if err := json.Unmarshal(jsonByte, &objMap); err != nil {
+			return err
+		}
+
+		noSqlStorage = append(noSqlStorage, objMap)
+	}
+
+	return nil
+}
+
+// Persist is used to write data to file. All datas will be saved into a json file on the server.
+
+// This method will make sure all your your data's are saved into a json file. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
 func (n *NoSQL) Persist() error {
 	if noSqlStorage == nil {
 		return nil
