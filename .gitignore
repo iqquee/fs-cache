@@ -21,3 +21,4 @@
 go.work
 
 example/main.go
+example/noSqlSorage.json

@@ -212,7 +212,6 @@ func Test_Delete_One(t *testing.T) {
 			if err != nil {
 				assert.Error(t, err)
 			}
-
 		})
 	}
 }
@@ -246,5 +245,89 @@ func Test_Delete_All(t *testing.T) {
 				assert.Error(t, err)
 			}
 		})
+	}
+}
+
+func Test_Update_One(t *testing.T) {
+	ch := Cache{}
+
+	// insert a new record
+	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	if err != nil {
+		assert.Error(t, err)
+	}
+	assert.NotNil(t, res)
+
+	testCases := []struct {
+		expectedError error
+		name          string
+		filter        map[string]interface{}
+		message       string
+		update        map[string]interface{}
+	}{
+		{
+			name:          "correct filter params",
+			expectedError: nil,
+			message:       "success",
+			filter: map[string]interface{}{
+				"age": 35.0,
+			},
+			update: map[string]interface{}{
+				"age": 29,
+			},
+		},
+		{
+			name:          "nil filter params",
+			expectedError: errors.New("filter params cannot be nil"),
+			message:       "failed_1",
+			filter:        nil,
+			update: map[string]interface{}{
+				"age": 28,
+			},
+		},
+		{
+			name:          "not found params",
+			expectedError: errors.New("record not found"),
+			message:       "failed_2",
+			filter: map[string]interface{}{
+				"age": 300.0,
+			},
+			update: map[string]interface{}{
+				"age": 28,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := ch.NoSql().Collection("user").Update(testCase.filter, testCase.update).One()
+			if testCase.message == "success" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else if testCase.message == "fail_1" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else {
+				assert.Equal(t, testCase.expectedError, err)
+			}
+		})
+	}
+}
+
+func Test_Persist(t *testing.T) {
+	ch := Cache{}
+
+	err := ch.NoSql().Persist()
+	if err != nil {
+		assert.Error(t, err)
+	}
+
+	assert.NoError(t, err)
+}
+
+func Test_LoadDefault(t *testing.T) {
+	ch := Cache{}
+
+	err := ch.NoSql().LoadDefault()
+	if err != nil {
+		assert.Equal(t, errors.New("error finding file"), err)
 	}
 }

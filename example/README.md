@@ -167,9 +167,9 @@ fmt.Println("keyValuePairs: ", keyValuePairs)
 # NoSql-like storage
 
 ### Persist()
-Persist is used to write data to file. All datas will be saved into a json file.
+// Persist is used to write data to file. All datas will be saved into a json file on the server.
 
-This method will make sure all your your data's are saved. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
+This method will make sure all your your data's are saved into a json file. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
 
 ```go
 fs := fscache.New()
@@ -238,6 +238,10 @@ Filter is used to filter records from the storage. It has two methods which are 
 
 - ### First()
 First is a method available in Filter(), it returns the first matching record from the filter.
+
+```go
+type User struct {}
+```
 ```go
 fs := fscache.New()
 
@@ -256,6 +260,10 @@ fmt.Println(result)
 
 - ### All()
 All is a method available in Filter(), it returns the all matching records from the filter.
+
+```go
+type User struct {}
+```
 ```go
 fs := fscache.New()
 
@@ -286,10 +294,7 @@ Delete is used to delete a new record from the storage. It has two methods which
 - ### One
 One is a method available in Delete(), it deletes a record and returns an error if any.
 ```go
-type User struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
-}
+type User struct {}
 ```
 ```go
 fs := fscache.New()
@@ -298,12 +303,16 @@ filter := map[string]interface{}{
 	"age": 20.0,
 }
 
-if err := fs.NoSql().Collection("user").Delete(filter).One(); err != nil {
+if err := fs.NoSql().Collection(User{}).Delete(filter).One(); err != nil {
 	fmt.Println(err)
 }
 ```
 - ### Many()
 Many adds many records into the storage at once
+```go
+type User struct {}
+```
+
 ```go
 fs := fscache.New()
 
@@ -312,12 +321,48 @@ filter := map[string]interface{}{
 }
 
 // to delete all records with matching filter from the storage
-if err := fs.NoSql().Collection("user").Delete(filter).All(); err != nil {
+if err := fs.NoSql().Collection(User{}).Delete(filter).All(); err != nil {
 	fmt.Println(err)
 }
 
 // to delete all records in the collection from the storage
-if err := fs.NoSql().Collection("user").Delete(nil).All(); err != nil {
+if err := fs.NoSql().Collection(User{}).Delete(nil).All(); err != nil {
+	fmt.Println(err)
+}
+```
+
+### Update()
+Update is used to update a existing record in the storage. It has a method which is One().
+
+- ### One
+One is a method available in Update(), it updates matching records from the filter, makes the necessry updated and returns an error if any.
+```go
+type User struct {}
+```
+```go
+fs := fscache.New()
+
+filter := map[string]interface{}{
+	"age": 35.0,
+}
+update := map[string]interface{}{
+	"age": 29,
+}
+
+if err := fs.NoSql().Collection(User{}).Update(filter, update); err != nil {
+	fmt.Println(err)
+}
+```
+
+### LoadDefault
+LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
+```go
+type User struct {}
+```
+```go
+fs := fscache.New()
+
+if err := fs.NoSql().LoadDefault(); err != nil {
 	fmt.Println(err)
 }
 ```
