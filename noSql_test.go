@@ -10,8 +10,8 @@ import (
 
 var noSqlTestCases = []interface{}{
 	struct {
-		Name string
-		Age  int
+		Name string `json:"name"`
+		Age  int    `json:"age"`
 	}{
 		Name: "Jane Doe",
 		Age:  25,
@@ -122,28 +122,42 @@ func Test__Filter_First(t *testing.T) {
 		assert.Error(t, err)
 	}
 	assert.NotNil(t, res)
-	filters := []map[string]interface{}{
-		{"age": 35.0}, // filter out records of age 35
 
-		nil, // for nil params
+	testCases := []struct {
+		name          string
+		expectedError error
+		message       string
+		filter        map[string]interface{}
+	}{
+		{
+			name:          "nil params",
+			expectedError: errors.New("filter params cannot be nil"),
+			message:       "fail_1",
+			filter:        nil, // for nil params
+		},
+		{
+			name:          "not nil params",
+			expectedError: nil,
+			message:       "success",
+			filter:        map[string]interface{}{"age": 35.0}, // filter out records of age 35
+		},
+		{
+			name:          "incorrect params",
+			expectedError: errors.New("record not found"),
+			message:       "fail_2",
+			filter:        map[string]interface{}{"age": 0},
+		},
 	}
 
-	for _, v := range filters {
-		var name string
-		if v == nil {
-			name = "nil params"
-		} else {
-			name = "not nil params"
-		}
-
-		t.Run(name, func(t *testing.T) {
-			result, err := ch.NoSql().Collection("users").Filter(v).First()
-			if err != nil {
-				assert.Error(t, err)
-			}
-
-			if result == nil {
-				assert.Equal(t, errors.New("filter params cannot be nil"), err)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result, err := ch.NoSql().Collection("users").Filter(testCase.filter).First()
+			if testCase.message == "fail_1" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else if testCase.message == "fail_2" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else {
+				assert.NotNil(t, result)
 			}
 		})
 	}
@@ -158,27 +172,35 @@ func Test_Filter_All(t *testing.T) {
 		assert.Error(t, err)
 	}
 	assert.NotNil(t, res)
-	filters := []map[string]interface{}{
-		{"age": 35.0}, // filter out records of age 35
 
-		nil, // for nil params
+	testCases := []struct {
+		name          string
+		expectedError error
+		message       string
+		filter        map[string]interface{}
+	}{
+		{
+			name:          "not nil params",
+			expectedError: nil,
+			message:       "success",
+			filter:        map[string]interface{}{"age": 35.0}, // filter out records of age 35
+		},
+		{
+			name:          "incorrect params",
+			expectedError: errors.New("record not found"),
+			message:       "fail",
+			filter:        map[string]interface{}{"age": 0},
+		},
 	}
 
-	for _, v := range filters {
-		var name string
-		if v == nil {
-			name = "nil params"
-		} else {
-			name = "not nil params"
-		}
-
-		t.Run(name, func(t *testing.T) {
-			result, err := ch.NoSql().Collection("users").Filter(v).All()
-			if err != nil {
-				assert.Error(t, err)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			results, err := ch.NoSql().Collection("users").Filter(testCase.filter).All()
+			if testCase.message != "success" {
+				assert.Equal(t, testCase.expectedError, err)
+			} else {
+				assert.NotNil(t, results)
 			}
-
-			assert.NotNil(t, result)
 		})
 	}
 }
