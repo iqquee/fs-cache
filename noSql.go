@@ -420,6 +420,7 @@ func (u *Update) One() error {
 							counter++
 							break
 						}
+						item["updatedAt"] = time.Now()
 					}
 					noSqlStorage[index] = item
 				}
