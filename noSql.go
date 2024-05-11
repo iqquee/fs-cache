@@ -362,7 +362,6 @@ func (d *Delete) All() error {
 			if item["colName"] == d.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
-					fmt.Println("Delected: ", item)
 					if index < (len(noSqlStorage) - 1) {
 						noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
 						index--
@@ -437,7 +436,7 @@ func (u *Update) One() error {
 
 // LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
 func (n *NoSQL) LoadDefault() error {
-	f, err := os.Open("./noSqlSorage.json")
+	f, err := os.Open("./noSqlStorage.json")
 	if err != nil {
 		return errors.New("error finding file")
 	}
@@ -497,7 +496,7 @@ func (n *NoSQL) Persist() error {
 		return err
 	}
 
-	file, err := os.Create("noSqlSorage.json")
+	file, err := os.Create("./noSqlStorage.json")
 	if err != nil {
 		return err
 	}
