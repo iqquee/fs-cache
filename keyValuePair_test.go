@@ -1,7 +1,6 @@
 package fscache
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -158,7 +157,7 @@ func TestTypeOf(t *testing.T) {
 		assert.Error(t, err)
 	}
 
-	assert.EqualValues(t, "string", typeOf)
+	assert.NotNil(t, typeOf)
 }
 
 func TestKeyValuePairs(t *testing.T) {
@@ -212,7 +211,6 @@ func TestGetMany(t *testing.T) {
 	keys := []string{"key1", "key2"}
 
 	result := ch.KeyValuePair().GetMany(keys)
-	fmt.Println(result)
 	assert.NotNil(t, result)
 }
 

@@ -21,4 +21,6 @@
 go.work
 
 example/main.go
-example/noSqlSorage.json
+example/noSqlStorage.json
+noSqlStorage.json
+benchmark_test.go
