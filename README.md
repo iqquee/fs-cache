@@ -2,14 +2,10 @@
 fs-cache provides a quick way to store and retrieve frequently accessed data, significantly enhancing your application performance and reducing database queries / API calls.
 
 ## Features
-- ### Key-value pair storage
-- ### Memgodb-like storage
+- ### Memdis storage
+- ### Memgodb storage
 
 ## Installation
-```sh
-go get github.com/iqquee/fs-cache@v1.0.0 
-```
-if you wish to use the Memgodb-like feature, then you should install like this
 ```sh
 go get github.com/iqquee/fs-cache@latest
 ```
@@ -19,7 +15,8 @@ go get github.com/iqquee/fs-cache@latest
 fscache "github.com/iqquee/fs-cache"
 ```
 
-## Key-Value Pair Storage
+## Memdis storage
+Memdis gives you a Redis-like feature similarly as you would with a Redis database.
 
 ### Set()
 Set() adds a new data into the in-memmory storage
@@ -45,7 +42,9 @@ if err != nil {
 fmt.Println("key1:", result)
 ```
 
-# Memgodb-like storage
+## Memgodb storage
+Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database.
+
 ### Persist()
 Persist is used to write data to file. All datas will be saved into a json file.
 
