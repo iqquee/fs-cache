@@ -13,30 +13,28 @@ var (
 )
 
 type (
-	// cacheData object
-	CacheData struct {
+	// MemdisData object
+	MemdisData struct {
 		Value    interface{}
 		Duration time.Time
 	}
 
-	// KeyPair object instance
-	KeyPair struct {
+	// Memdis object instance
+	Memdis struct {
 		logger zerolog.Logger
-		// Storage for key value pair storage
-		Storage []map[string]CacheData
+		// storage for key value pair storage
+		storage []map[string]MemdisData
 	}
 
-	// NoSQL object instance
-	NoSQL struct {
+	// Memgodb object instance
+	Memgodb struct {
 		logger zerolog.Logger
 	}
 
 	// Cache object
 	Cache struct {
-		// debug enables debugging
-		// debug   bool
-		KeyPair KeyPair
-		NoSQL   NoSQL
+		MemdisInstance  Memdis
+		MemgodbInstance Memgodb
 	}
 
 	// Operations lists all available operations on the fscache
@@ -44,30 +42,30 @@ type (
 		// Debug() enables debug to get certain logs
 		Debug()
 
-		KeyValuePair() *KeyPair
-		NoSql() *NoSQL
+		// Memdis gives you a Redis-like feature similarly as you would with a Redis database
+		Memdis() *Memdis
+		// Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database
+		Memgodb() *Memgodb
 	}
 )
 
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
-	var keyValuePair []map[string]CacheData
-	// var noSql []interface{}
+	var memdicSorage []map[string]MemdisData
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
-	kp := KeyPair{
+	md := Memdis{
 		logger:  logger,
-		Storage: keyValuePair,
+		storage: memdicSorage,
 	}
 
-	noSQL := NoSQL{
+	Memgodb := Memgodb{
 		logger: logger,
-		// storage: noSql,
 	}
 
 	ch := Cache{
-		KeyPair: kp,
-		NoSQL:   noSQL,
+		MemdisInstance:  md,
+		MemgodbInstance: Memgodb,
 	}
 
 	c := cron.New()
@@ -78,23 +76,23 @@ func New() Operations {
 			logger.Info().Msg("cron job running...")
 		}
 
-		if persistNoSqlData {
-			if err := ch.NoSQL.Persist(); err != nil {
+		if persistMemgodbData {
+			if err := ch.MemgodbInstance.Persist(); err != nil {
 				if debug {
 					logger.Info().Msgf("persist error: %v", err)
 				}
 			}
 		}
 
-		for i := 0; i < len(ch.KeyPair.Storage); i++ {
-			for _, value := range ch.KeyPair.Storage[i] {
+		for i := 0; i < len(ch.MemdisInstance.storage); i++ {
+			for _, value := range ch.MemdisInstance.storage[i] {
 				currenctTime := time.Now()
 				if currenctTime.Before(value.Duration) {
 					if debug {
-						logger.Info().Msgf("data object [%v] got expired ", ch.KeyPair.Storage[i])
+						logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
 					}
 					// take the data from off the array object
-					ch.KeyPair.Storage = append(ch.KeyPair.Storage[:i], ch.KeyPair.Storage[i+1:]...)
+					ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
 					// decrement the array index by 1 since an object have been taken off the array
 					i--
 				}
@@ -117,49 +115,13 @@ func (c *Cache) Debug() {
 }
 
 // KeyValue returns methods for key-value pair storage
-func (c *Cache) KeyValuePair() *KeyPair {
-	return &c.KeyPair
+func (c *Cache) Memdis() *Memdis {
+	return &c.MemdisInstance
 }
 
-// NoSql returns methods for noSql-like storage
-func (c *Cache) NoSql() *NoSQL {
-	return &NoSQL{
-		logger: c.NoSQL.logger,
+// Memgodb returns methods for Memgodb-like storage
+func (c *Cache) Memgodb() *Memgodb {
+	return &Memgodb{
+		logger: c.MemgodbInstance.logger,
 	}
 }
-
-// create
-// client.NoSQL.Collection(struct{}).Insert(struct{})
-
-// create many
-// client.NoSQL.Collection(struct{}).InsertMany(struct{})
-
-// filter
-// client.NoSQL.Collection(struct{}).Find(map[string]interface{}).First()
-
-// filter many
-// client.NoSQL.Collection(struct{}).Find(map[string]interface{}).All()
-
-// update
-// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).Update(struct{})
-
-// delete one
-// client.NoSQL.Collection(struct{}).DeleteOne(map[string]interface{})
-
-// delete many
-// client.NoSQL.Collection(struct{}).DeleteMany([]map[string]interface{})
-
-// filter and return all
-// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All()
-
-// filter and return all paginated
-// client.NoSQL.Collection(struct{}).Find([]map[string]interface{}).All().Paginate(pd ...pageDetails)
-
-// count
-// client.NoSQL.Collection(struct{}).Count()
-
-// delete all datas in a collection
-// client.NoSQL.Collection(struct{}).Remove()
-
-// deletea all collections data
-// client.NoSQL.DropAll()

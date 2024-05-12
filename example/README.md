@@ -1,6 +1,6 @@
 ## Installation
 ```sh
-go get github.com/iqquee/fs-cache@v1.0.0 
+go get github.com/iqquee/fs-cache@v1.0.0
 ```
 ## Import
 ```sh
@@ -15,8 +15,8 @@ fs := fscache.New()
 fs.Debug()
 ```
 
-# Key-value pair storage
-
+# Memdis storage
+Memdis gives you a Redis-like feature similarly as you would with a Redis database.
 ### Set()
 Set() adds a new data into the in-memmory storage
 ```go
@@ -46,13 +46,13 @@ SetMany() sets many data objects into memory for later access
 ```go
 fs := fscache.New()
 
-testCase := []map[string]fscache.CacheData{
+testCase := []map[string]fscache.MemdisData{
 	{
-		"key4": fscache.CacheData{
+		"key4": fscache.MemdisData{
 			Value:    "value4",
 			Duration: time.Now().Add(time.Minute),
 		},
-		"key5": fscache.CacheData{
+		"key5": fscache.MemdisData{
 			Value: false,
 		},
 	},
@@ -164,7 +164,8 @@ keyValuePairs := fs.KeyValuePair().KeyValuePairs()
 fmt.Println("keyValuePairs: ", keyValuePairs)
 ```
 
-# NoSql-like storage
+# Memgodb storage
+Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database.
 
 ### Persist()
 // Persist is used to write data to file. All datas will be saved into a json file on the server.
@@ -174,7 +175,7 @@ This method will make sure all your your data's are saved into a json file. A cr
 ```go
 fs := fscache.New()
 
-if err := fs.NoSql().Persist(); err != nil {
+if err := fs.Memgodb().Persist(); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -197,7 +198,7 @@ var user User
 user.Name = "jane doe" 
 user.Age = 20
 
-res, err := fs.NoSql().Collection(User{}).Insert(user).One
+res, err := fs.Memgodb().Collection(User{}).Insert(user).One()
 if err != nil {
 	fmt.Println(err)
 }
@@ -219,7 +220,7 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.NoSql().Collection("user").Insert(nil).Many(users); err != nil {
+if err := fs.Memgodb().Collection("user").Insert(nil).Many(users); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -228,7 +229,7 @@ FromJsonFile is a method available in Insert(). It adds record(s) into the stora
 ```go
 fs := fscache.New()
 
-if err := fs.NoSql().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
+if err := fs.Memgodb().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -250,7 +251,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Filter(filter).First()
+result, err := fs.Memgodb().Collection(User{}).Filter(filter).First()
 if err != nil {
 	fmt.Println(err)
 }
@@ -273,14 +274,14 @@ filter := map[string]interface{}{
 }
 
 // to get all records with matching filter from the storage
-matchingRecords, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+matchingRecords, err := fs.Memgodb().Collection(User{}).Filter(filter).All()
 if err != nil {
 	fmt.Println(err)
 }
 fmt.Println(matchingRecords)
 
 // to get all records from the collection from the storage
-allRecords, err := fs.NoSql().Collection(User{}).Filter(nil).All()
+allRecords, err := fs.Memgodb().Collection(User{}).Filter(nil).All()
 if err != nil {
 	fmt.Println(err)
 }
@@ -303,7 +304,7 @@ filter := map[string]interface{}{
 	"age": 20.0,
 }
 
-if err := fs.NoSql().Collection(User{}).Delete(filter).One(); err != nil {
+if err := fs.Memgodb().Collection(User{}).Delete(filter).One(); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -321,12 +322,12 @@ filter := map[string]interface{}{
 }
 
 // to delete all records with matching filter from the storage
-if err := fs.NoSql().Collection(User{}).Delete(filter).All(); err != nil {
+if err := fs.Memgodb().Collection(User{}).Delete(filter).All(); err != nil {
 	fmt.Println(err)
 }
 
 // to delete all records in the collection from the storage
-if err := fs.NoSql().Collection(User{}).Delete(nil).All(); err != nil {
+if err := fs.Memgodb().Collection(User{}).Delete(nil).All(); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -349,7 +350,7 @@ update := map[string]interface{}{
 	"age": 29,
 }
 
-if err := fs.NoSql().Collection(User{}).Update(filter, update); err != nil {
+if err := fs.Memgodb().Collection(User{}).Update(filter, update); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -362,7 +363,7 @@ type User struct {}
 ```go
 fs := fscache.New()
 
-if err := fs.NoSql().LoadDefault(); err != nil {
+if err := fs.Memgodb().LoadDefault(); err != nil {
 	fmt.Println(err)
 }
 ```

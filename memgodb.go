@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	// noSql storage instance
-	noSqlStorage []interface{}
-	// persistNosqlData to enable persistence of noSql data
-	persistNoSqlData bool
+	// MemgodbStorage storage instance
+	MemgodbStorage []interface{}
+	// persistMemgodbData to enable persistence of Memgodb data
+	persistMemgodbData bool
 )
 
 type (
@@ -63,7 +63,7 @@ type (
 )
 
 // Collection defines the collection(table) name to perform an operations on
-func (ns *NoSQL) Collection(col interface{}) *Collection {
+func (ns *Memgodb) Collection(col interface{}) *Collection {
 	t := reflect.TypeOf(col)
 
 	// run validation
@@ -128,7 +128,7 @@ func (i *Insert) One() (interface{}, error) {
 	objMap["createdAt"] = time.Now()
 	objMap["updatedAt"] = nil
 
-	noSqlStorage = append(noSqlStorage, objMap)
+	MemgodbStorage = append(MemgodbStorage, objMap)
 	return objMap, nil
 }
 
@@ -218,7 +218,7 @@ func (c *Collection) Filter(filter map[string]interface{}) *Filter {
 	var err error
 
 	if filter != nil {
-		objMaps, err = c.decodeMany(noSqlStorage)
+		objMaps, err = c.decodeMany(MemgodbStorage)
 		if err != nil {
 			return nil
 		}
@@ -266,7 +266,7 @@ func (f *Filter) First() (map[string]interface{}, error) {
 func (f *Filter) All() ([]map[string]interface{}, error) {
 	if f.objMaps == nil {
 		var objMaps []map[string]interface{}
-		arrObj, err := json.Marshal(noSqlStorage)
+		arrObj, err := json.Marshal(MemgodbStorage)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +304,7 @@ func (c *Collection) Delete(filter map[string]interface{}) *Delete {
 	var err error
 
 	if filter != nil {
-		objMaps, err = c.decodeMany(noSqlStorage)
+		objMaps, err = c.decodeMany(MemgodbStorage)
 		if err != nil {
 			return nil
 		}
@@ -329,12 +329,12 @@ func (d *Delete) One() error {
 			if item["colName"] == d.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
-					if index < (len(noSqlStorage) - 1) {
-						noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+					if index < (len(MemgodbStorage) - 1) {
+						MemgodbStorage = append(MemgodbStorage[:index], MemgodbStorage[index+1:]...)
 						index--
 						break
 					} else {
-						noSqlStorage = noSqlStorage[:index]
+						MemgodbStorage = MemgodbStorage[:index]
 						break
 					}
 				}
@@ -352,7 +352,7 @@ func (d *Delete) One() error {
 // All is a method available in Delete(), it deletes matching records from the filter and returns an error if any.
 func (d *Delete) All() error {
 	if d.objMaps == nil {
-		noSqlStorage = noSqlStorage[:0]
+		MemgodbStorage = MemgodbStorage[:0]
 		return nil
 	}
 
@@ -362,11 +362,11 @@ func (d *Delete) All() error {
 			if item["colName"] == d.collection.collectionName {
 				if v, ok := item[key]; ok && val == v {
 					notFound = false
-					if index < (len(noSqlStorage) - 1) {
-						noSqlStorage = append(noSqlStorage[:index], noSqlStorage[index+1:]...)
+					if index < (len(MemgodbStorage) - 1) {
+						MemgodbStorage = append(MemgodbStorage[:index], MemgodbStorage[index+1:]...)
 						index--
 					} else {
-						noSqlStorage = noSqlStorage[:index]
+						MemgodbStorage = MemgodbStorage[:index]
 					}
 				}
 			}
@@ -386,7 +386,7 @@ func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
 	var err error
 
 	if filter != nil {
-		objMaps, err = c.decodeMany(noSqlStorage)
+		objMaps, err = c.decodeMany(MemgodbStorage)
 		if err != nil {
 			return nil
 		}
@@ -421,7 +421,7 @@ func (u *Update) One() error {
 						}
 						item["updatedAt"] = time.Now()
 					}
-					noSqlStorage[index] = item
+					MemgodbStorage[index] = item
 				}
 			}
 		}
@@ -435,8 +435,8 @@ func (u *Update) One() error {
 }
 
 // LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
-func (n *NoSQL) LoadDefault() error {
-	f, err := os.Open("./noSqlStorage.json")
+func (n *Memgodb) LoadDefault() error {
+	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
 	}
@@ -464,7 +464,7 @@ func (n *NoSQL) LoadDefault() error {
 			return err
 		}
 
-		noSqlStorage = append(noSqlStorage, objMap...)
+		MemgodbStorage = append(MemgodbStorage, objMap...)
 	} else if t.Kind() == reflect.Map {
 		var objMap interface{}
 		jsonByte, err := json.Marshal(obj)
@@ -476,7 +476,7 @@ func (n *NoSQL) LoadDefault() error {
 			return err
 		}
 
-		noSqlStorage = append(noSqlStorage, objMap)
+		MemgodbStorage = append(MemgodbStorage, objMap)
 	}
 
 	return nil
@@ -485,18 +485,18 @@ func (n *NoSQL) LoadDefault() error {
 // Persist is used to write data to file. All datas will be saved into a json file on the server.
 
 // This method will make sure all your your data's are saved into a json file. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
-func (n *NoSQL) Persist() error {
-	if noSqlStorage == nil {
+func (n *Memgodb) Persist() error {
+	if MemgodbStorage == nil {
 		return nil
 	}
 
-	persistNoSqlData = true
-	jsonByte, err := json.Marshal(noSqlStorage)
+	persistMemgodbData = true
+	jsonByte, err := json.Marshal(MemgodbStorage)
 	if err != nil {
 		return err
 	}
 
-	file, err := os.Create("./noSqlStorage.json")
+	file, err := os.Create("./memgodbstorage.json")
 	if err != nil {
 		return err
 	}
