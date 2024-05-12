@@ -23,7 +23,7 @@ Set() adds a new data into the in-memmory storage
 fs := fscache.New()
 
 // the third param is an optional param used to set the expiration time of the set data
-if err := fs.KeyValuePair().Set("key1", "user1", 5*time.Minute); err != nil {
+if err := fs.Memdis().Set("key1", "user1", 5*time.Minute); err != nil {
 	fmt.Println("error setting key1:", err)
 }
 ```
@@ -33,7 +33,7 @@ Get() retrieves a data from the in-memmory storage
 ```go
 fs := fscache.New()
 
-result, err := fs.KeyValuePair().Get("key1")
+result, err := fs.Memdis().Get("key1")
 if err != nil {
 	fmt.Println("error getting key 1:", err)
 }
@@ -58,7 +58,7 @@ testCase := []map[string]fscache.MemdisData{
 	},
 }
 
-setMany, err := fs.KeyValuePair().SetMany(testCase)
+setMany, err := fs.Memdis().SetMany(testCase)
 if err != nil {
 	fmt.Println("error setMany:", err)
 }
@@ -72,7 +72,7 @@ fs := fscache.New()
 
 keys := []string{"key1", "key2"}
 
-getMany := fs.KeyValuePair().GetMany(keys)
+getMany := fs.Memdis().GetMany(keys)
 fmt.Println("getMany:", getMany)
 ```
 
@@ -81,7 +81,7 @@ OverWrite() updates an already set value using it key
 ```go
 fs := fscache.New()
 
-if err := fs.KeyValuePair().OverWrite("key1", "overwrite1", 1*time.Minute); err != nil {
+if err := fs.Memdis().OverWrite("key1", "overwrite1", 1*time.Minute); err != nil {
 	fmt.Println("error overwriting:", err)
 }
 ```
@@ -91,7 +91,7 @@ OverWriteWithKey() updates an already set value and key using the previously set
 ```go
 fs := fscache.New()
 
-if err := fs.KeyValuePair().OverWriteWithKey("previousKey", "newKey", "newValue", 1*time.Minute); err != nil {
+if err := fs.Memdis().OverWriteWithKey("previousKey", "newKey", "newValue", 1*time.Minute); err != nil {
 	fmt.Println("error overWriteWithKey:", err)
 }
 ```
@@ -101,7 +101,7 @@ Del() deletes a data from the in-memmory storage
 ```go
 fs := fscache.New()
 
-if err := fs.KeyValuePair().Del("key1"); err != nil {
+if err := fs.Memdis().Del("key1"); err != nil {
 	fmt.Println("error deleting key 1:", err)
 }
 ```
@@ -111,7 +111,7 @@ TypeOf() returns the data type of a value
 ```go
 fs := fscache.New()
 
-typeOf, err := fs.KeyValuePair().TypeOf("key1")
+typeOf, err := fs.Memdis().TypeOf("key1")
 if err != nil {
 	fmt.Println("error typeOf:", err)
 }
@@ -123,7 +123,7 @@ Clear() deletes all datas from the in-memmory storage
 ```go
 fs := fscache.New()
 
-if err := fs.KeyValuePair().Clear(); err != nil {
+if err := fs.Memdis().Clear(); err != nil {
 	fmt.Println("error clearing all datas:", err)
 }
 ```
@@ -133,7 +133,7 @@ Size() retrieves the total data objects in the in-memmory storage
 ```go
 fs := fscache.New()
 
-size := fs.KeyValuePair().Size()
+size := fs.Memdis().Size()
 fmt.Println("total size: ", size)
 ```
 
@@ -142,7 +142,7 @@ Keys() returns all the keys in the storage
 ```go
 fs := fscache.New()
 
-keys := fs.KeyValuePair().Keys()
+keys := fs.Memdis().Keys()
 fmt.Println("keys: ", keys)
 ```
 
@@ -151,7 +151,7 @@ Values() returns all the values in the storage
 ```go
 fs := fscache.New()
 
-values := fs.KeyValuePair().Values()
+values := fs.Memdis().Values()
 fmt.Println("values: ", values)
 ```
 
@@ -160,7 +160,7 @@ KeyValuePairs() returns an array of key value pairs of all the datas in the stor
 ```go
 fs := fscache.New()
 
-keyValuePairs := fs.KeyValuePair().KeyValuePairs()
+keyValuePairs := fs.Memdis().KeyValuePairs()
 fmt.Println("keyValuePairs: ", keyValuePairs)
 ```
 
