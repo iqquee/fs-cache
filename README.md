@@ -24,7 +24,7 @@ Set() adds a new data into the in-memmory storage
 fs := fscache.New()
 
 // the third param is an optional param used to set the expiration time of the set data
-if err := fs.KeyValuePair().Set("key1", "user1", 5*time.Minute); err != nil {
+if err := fs.Memdis().Set("key1", "user1", 5*time.Minute); err != nil {
 	fmt.Println("error setting key1:", err)
 }
 ```
@@ -34,7 +34,7 @@ Get() retrieves a data from the in-memmory storage
 ```go
 fs := fscache.New()
 
-result, err := fs.KeyValuePair().Get("key1")
+result, err := fs.Memdis().Get("key1")
 if err != nil {
 	fmt.Println("error getting key 1:", err)
 }
