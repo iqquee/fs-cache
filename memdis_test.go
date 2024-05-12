@@ -7,22 +7,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// test cases
-var testCases = []map[string]CacheData{
+// memdis test cases
+var memdisTestCases = []map[string]MemdisData{
 	{
-		"key1": CacheData{
+		"key1": MemdisData{
 			Value:    "value1",
 			Duration: time.Now().Add(time.Minute),
 		},
 	},
 	{
-		"key2": CacheData{
+		"key2": MemdisData{
 			Value:    10,
 			Duration: time.Time{},
 		},
 	},
 	{
-		"key3": CacheData{
+		"key3": MemdisData{
 			Value:    true,
 			Duration: time.Time{},
 		},
@@ -30,14 +30,14 @@ var testCases = []map[string]CacheData{
 }
 
 func TestSet(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	if err := ch.KeyValuePair().Set("key1", "value1", time.Minute); err != nil {
+	if err := ch.Memdis().Set("key1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -45,14 +45,14 @@ func TestSet(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	value, err := ch.KeyValuePair().Get("key1")
+	value, err := ch.Memdis().Get("key1")
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -61,14 +61,14 @@ func TestGet(t *testing.T) {
 }
 
 func TestDel(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	if err := ch.KeyValuePair().Del("key1"); err != nil {
+	if err := ch.Memdis().Del("key1"); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -76,14 +76,14 @@ func TestDel(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	if err := ch.KeyValuePair().Clear(); err != nil {
+	if err := ch.Memdis().Clear(); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -91,23 +91,23 @@ func TestClear(t *testing.T) {
 }
 
 func TestSize(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	value := ch.KeyValuePair().Size()
+	value := ch.Memdis().Size()
 	assert.EqualValues(t, 3, value)
 }
 
 func TestDebug(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
 	ch.Debug()
@@ -115,14 +115,14 @@ func TestDebug(t *testing.T) {
 }
 
 func TestOverWrite(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	if err := ch.KeyValuePair().OverWrite("key1", "overwrite1", time.Minute); err != nil {
+	if err := ch.Memdis().OverWrite("key1", "overwrite1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -130,14 +130,14 @@ func TestOverWrite(t *testing.T) {
 }
 
 func TestOverWriteWithKey(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	if err := ch.KeyValuePair().OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
+	if err := ch.Memdis().OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -145,14 +145,14 @@ func TestOverWriteWithKey(t *testing.T) {
 }
 
 func TestTypeOf(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	typeOf, err := ch.KeyValuePair().TypeOf("key1")
+	typeOf, err := ch.Memdis().TypeOf("key1")
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -161,38 +161,38 @@ func TestTypeOf(t *testing.T) {
 }
 
 func TestKeyValuePairs(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	datas := ch.KeyValuePair().KeyValuePairs()
+	datas := ch.Memdis().KeyValuePairs()
 	assert.NotNil(t, datas)
 }
 
 func TestSetMany(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	testCase := []map[string]CacheData{
+	testCase := []map[string]MemdisData{
 		{
-			"key4": CacheData{
+			"key4": MemdisData{
 				Value:    "value4",
 				Duration: time.Now().Add(time.Minute),
 			},
-			"key5": CacheData{
+			"key5": MemdisData{
 				Value: false,
 			},
 		},
 	}
 
-	datas, err := ch.KeyValuePair().SetMany(testCase)
+	datas, err := ch.Memdis().SetMany(testCase)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -201,39 +201,39 @@ func TestSetMany(t *testing.T) {
 }
 
 func TestGetMany(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
 	keys := []string{"key1", "key2"}
 
-	result := ch.KeyValuePair().GetMany(keys)
+	result := ch.Memdis().GetMany(keys)
 	assert.NotNil(t, result)
 }
 
 func TestKeys(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	keys := ch.KeyValuePair().Keys()
+	keys := ch.Memdis().Keys()
 	assert.NotNil(t, keys)
 }
 
 func TestValues(t *testing.T) {
-	kp := KeyPair{
-		Storage: testCases,
+	md := Memdis{
+		storage: memdisTestCases,
 	}
 	ch := Cache{
-		KeyPair: kp,
+		MemdisInstance: md,
 	}
 
-	values := ch.KeyValuePair().Values()
+	values := ch.Memdis().Values()
 	assert.NotNil(t, values)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var noSqlTestCases = []interface{}{
+var MemgodbTestCases = []interface{}{
 	struct {
 		Name string `json:"name"`
 		Age  int    `json:"age"`
@@ -31,7 +31,7 @@ var noSqlTestCases = []interface{}{
 func Test_Collection(t *testing.T) {
 	ch := Cache{}
 
-	col := ch.NoSql().Collection("user")
+	col := ch.Memgodb().Collection("user")
 	assert.NotNil(t, col)
 	assert.Equal(t, "users", col.collectionName)
 }
@@ -41,9 +41,9 @@ func Test_Insert_One(t *testing.T) {
 
 	var counter int
 	name := fmt.Sprintf("testCase_%v", counter+1)
-	for _, v := range noSqlTestCases {
+	for _, v := range MemgodbTestCases {
 		t.Run(name, func(t *testing.T) {
-			res, err := ch.NoSql().Collection("user").Insert(v).One()
+			res, err := ch.Memgodb().Collection("user").Insert(v).One()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -58,7 +58,7 @@ func Test_Insert_One(t *testing.T) {
 func Test_Insert_Many(t *testing.T) {
 	ch := Cache{}
 
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -103,7 +103,7 @@ func Test_Insert_FromJsonFile(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := ch.NoSql().Collection("user").Insert(nil).FromJsonFile(testCase.fileName)
+			err := ch.Memgodb().Collection("user").Insert(nil).FromJsonFile(testCase.fileName)
 			if testCase.message != "success" {
 				assert.Equal(t, testCase.expectedError, err)
 			} else {
@@ -117,7 +117,7 @@ func Test__Filter_First(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new records
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -151,7 +151,7 @@ func Test__Filter_First(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			result, err := ch.NoSql().Collection("users").Filter(testCase.filter).First()
+			result, err := ch.Memgodb().Collection("users").Filter(testCase.filter).First()
 			if testCase.message == "fail_1" {
 				assert.Equal(t, testCase.expectedError, err)
 			} else if testCase.message == "fail_2" {
@@ -167,7 +167,7 @@ func Test_Filter_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new records
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -195,7 +195,7 @@ func Test_Filter_All(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := ch.NoSql().Collection("users").Filter(testCase.filter).All()
+			results, err := ch.Memgodb().Collection("users").Filter(testCase.filter).All()
 			if testCase.message != "success" {
 				assert.Equal(t, testCase.expectedError, err)
 			} else {
@@ -209,7 +209,7 @@ func Test_Delete_One(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -230,7 +230,7 @@ func Test_Delete_One(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
-			err := ch.NoSql().Collection("users").Delete(v).One()
+			err := ch.Memgodb().Collection("users").Delete(v).One()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -242,7 +242,7 @@ func Test_Delete_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -262,7 +262,7 @@ func Test_Delete_All(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
-			err := ch.NoSql().Collection("users").Delete(v).All()
+			err := ch.Memgodb().Collection("users").Delete(v).All()
 			if err != nil {
 				assert.Error(t, err)
 			}
@@ -274,7 +274,7 @@ func Test_Update_One(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	res, err := ch.NoSql().Collection("user").Insert(nil).Many(noSqlTestCases)
+	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -322,7 +322,7 @@ func Test_Update_One(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := ch.NoSql().Collection("user").Update(testCase.filter, testCase.update).One()
+			err := ch.Memgodb().Collection("user").Update(testCase.filter, testCase.update).One()
 			if testCase.message == "success" {
 				assert.Equal(t, testCase.expectedError, err)
 			} else if testCase.message == "fail_1" {
@@ -337,7 +337,7 @@ func Test_Update_One(t *testing.T) {
 func Test_Persist(t *testing.T) {
 	ch := Cache{}
 
-	err := ch.NoSql().Persist()
+	err := ch.Memgodb().Persist()
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -348,7 +348,7 @@ func Test_Persist(t *testing.T) {
 func Test_LoadDefault(t *testing.T) {
 	ch := Cache{}
 
-	err := ch.NoSql().LoadDefault()
+	err := ch.Memgodb().LoadDefault()
 	if err != nil {
 		assert.Equal(t, errors.New("error finding file"), err)
 	}

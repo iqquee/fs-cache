@@ -3,13 +3,13 @@ fs-cache provides a quick way to store and retrieve frequently accessed data, si
 
 ## Features
 - ### Key-value pair storage
-- ### NoSql-like storage
+- ### Memgodb-like storage
 
 ## Installation
 ```sh
 go get github.com/iqquee/fs-cache@v1.0.0 
 ```
-if you wish to use the noSQL-like feature, then you should install like this
+if you wish to use the Memgodb-like feature, then you should install like this
 ```sh
 go get github.com/iqquee/fs-cache@latest
 ```
@@ -45,7 +45,7 @@ if err != nil {
 fmt.Println("key1:", result)
 ```
 
-# NoSql-like storage
+# Memgodb-like storage
 ### Persist()
 Persist is used to write data to file. All datas will be saved into a json file.
 
@@ -53,7 +53,7 @@ This method will make sure all your your data's are saved. A cronJon runs ever m
 ```go
 fs := fscache.New()
 
-if err := fs.NoSql().Persist(); err != nil {
+if err := fs.Memgodb().Persist(); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -76,7 +76,7 @@ var user User
 user.Name = "jane doe" 
 user.Age = 20
 
-res, err := fs.NoSql().Collection(User{}).Insert(user).One
+res, err := fs.Memgodb().Collection(User{}).Insert(user).One()
 if err != nil {
 	fmt.Println(err)
 }
@@ -98,7 +98,7 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.NoSql().Collection("user").Insert(nil).Many(users); err != nil {
+if err := fs.Memgodb().Collection("user").Insert(nil).Many(users); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -107,7 +107,7 @@ FromJsonFile is a method available in Insert(). It adds record(s) into the stora
 ```go
 fs := fscache.New()
 
-if err := fs.NoSql().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
+if err := fs.Memgodb().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -125,7 +125,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.NoSql().Collection(User{}).Filter(filter).First()
+result, err := fs.Memgodb().Collection(User{}).Filter(filter).First()
 if err != nil {
 	fmt.Println(err)
 }
@@ -144,14 +144,14 @@ filter := map[string]interface{}{
 }
 
 // to get all records with matching filter from the storage
-matchingRecords, err := fs.NoSql().Collection(User{}).Filter(filter).All()
+matchingRecords, err := fs.Memgodb().Collection(User{}).Filter(filter).All()
 if err != nil {
 	fmt.Println(err)
 }
 fmt.Println(matchingRecords)
 
 // to get all records from the collection from the storage
-allRecords, err := fs.NoSql().Collection(User{}).Filter(nil).All()
+allRecords, err := fs.Memgodb().Collection(User{}).Filter(nil).All()
 if err != nil {
 	fmt.Println(err)
 }
