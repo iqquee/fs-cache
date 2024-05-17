@@ -15,6 +15,9 @@ var (
 
 // Set() adds a new data into the in-memory storage
 func (md *Memdis) Set(key string, value any, duration ...time.Duration) error {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	for _, cache := range md.storage {
 		if _, ok := cache[key]; ok {
 			return ErrKeyExists
@@ -42,6 +45,9 @@ func (md *Memdis) Set(key string, value any, duration ...time.Duration) error {
 
 // SetMany() sets many data objects into memory for later access
 func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]any, error) {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	md.storage = append(md.storage, data...)
 	KeyValuePairs := md.KeyValuePairs()
 
@@ -50,6 +56,9 @@ func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]any, error
 
 // Get() retrieves a data from the in-memory storage
 func (md *Memdis) Get(key string) (any, error) {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	for _, cache := range md.storage {
 		if val, ok := cache[key]; ok {
 			return val.Value, nil
@@ -62,7 +71,6 @@ func (md *Memdis) Get(key string) (any, error) {
 // GetMany() retrieves data with matching keys from the in-memory storage
 func (md *Memdis) GetMany(keys []string) []map[string]any {
 	keyValuePairs := []map[string]any{}
-
 	for _, cache := range md.storage {
 		data := make(map[string]any)
 		for _, key := range keys {
@@ -78,6 +86,9 @@ func (md *Memdis) GetMany(keys []string) []map[string]any {
 
 // Del() deletes a data from the in-memory storage
 func (md *Memdis) Del(key string) error {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	for index, cache := range md.storage {
 		if _, ok := cache[key]; ok {
 			md.storage = append(md.storage[:index], md.storage[index+1:]...)
@@ -91,7 +102,6 @@ func (md *Memdis) Del(key string) error {
 // Clear() deletes all data from the in-memory storage
 func (md *Memdis) Clear() error {
 	md.storage = md.storage[:0]
-
 	return nil
 }
 
@@ -102,6 +112,9 @@ func (md *Memdis) Size() int {
 
 // OverWrite() updates an already set value using it key
 func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) error {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[key]; ok {
@@ -135,6 +148,9 @@ func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) er
 
 // OverWriteWithKey() updates an already set value and key using the previously set key
 func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value any, duration ...time.Duration) error {
+	md.mu.Lock()
+	defer md.mu.Unlock()
+
 	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[prevkey]; ok {

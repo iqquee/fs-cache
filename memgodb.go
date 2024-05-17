@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,12 +32,14 @@ var (
 type (
 	// Collection object
 	Collection struct {
+		mu             *sync.RWMutex
 		logger         zerolog.Logger
 		collectionName string
 	}
 
 	// Insert object implements One() and Many() to insert new records
 	Insert struct {
+		mu         *sync.RWMutex
 		obj        any
 		collection Collection
 	}
@@ -50,6 +53,7 @@ type (
 
 	// Delete object implements One() and All()
 	Delete struct {
+		mu         *sync.RWMutex
 		objMaps    []map[string]any
 		filter     map[string]any
 		collection Collection
@@ -62,6 +66,7 @@ type (
 
 	// Update object implements One() and All()
 	Update struct {
+		mu         *sync.RWMutex
 		objMaps    []map[string]any
 		filter     map[string]any
 		update     map[string]any
@@ -70,20 +75,20 @@ type (
 )
 
 // Collection defines the collection(table) name to perform an operation on it
-func (ns *Memgodb) Collection(col any) *Collection {
+func (mg *Memgodb) Collection(col any) *Collection {
 	t := reflect.TypeOf(col)
 
 	// run validation
 	if reflect.ValueOf(col).IsZero() && col == nil {
 		if debug {
-			ns.logger.Error().Msg("Collection cannot be empty...")
+			mg.logger.Error().Msg("Collection cannot be empty...")
 		}
 		panic("Collection cannot be empty...")
 	}
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.String {
 		if debug {
-			ns.logger.Error().Msg("Collection must either be a [string] or an [object]")
+			mg.logger.Error().Msg("Collection must either be a [string] or an [object]")
 		}
 		panic("Collection must either be a [string] or an [object]")
 	}
@@ -100,7 +105,8 @@ func (ns *Memgodb) Collection(col any) *Collection {
 	}
 
 	return &Collection{
-		logger:         ns.logger,
+		mu:             mg.mu,
+		logger:         mg.logger,
 		collectionName: colName,
 	}
 }
@@ -108,6 +114,7 @@ func (ns *Memgodb) Collection(col any) *Collection {
 // Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
 func (c *Collection) Insert(obj any) *Insert {
 	return &Insert{
+		mu:         c.mu,
 		obj:        obj,
 		collection: *c,
 	}
@@ -115,6 +122,9 @@ func (c *Collection) Insert(obj any) *Insert {
 
 // One is a method available in Insert(). It adds a new record into the storage with collection name
 func (i *Insert) One() (any, error) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
 	if i.obj == nil {
 		return nil, errors.New("One() params cannot be nil")
 	}
@@ -141,6 +151,9 @@ func (i *Insert) One() (any, error) {
 
 // Many is a method available in Insert(). It adds many records into the storage at once
 func (i *Insert) Many(arr any) ([]any, error) {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
 	if i.obj != nil {
 		return nil, errors.New("Many() params must be nil to insert Many")
 	}
@@ -171,6 +184,9 @@ func (i *Insert) Many(arr any) ([]any, error) {
 
 // FromJsonFile is a method available in Insert(). It adds records into the storage from a JSON file
 func (i *Insert) FromJsonFile(fileLocation string) error {
+	i.mu.Lock()
+	defer i.mu.Unlock()
+
 	if i.obj != nil {
 		return errors.New("FromFile() params must be nil to insert from file")
 	}
@@ -318,6 +334,7 @@ func (c *Collection) Delete(filter map[string]any) *Delete {
 	}
 
 	return &Delete{
+		mu:         c.mu,
 		objMaps:    objMaps,
 		filter:     filter,
 		collection: *c,
@@ -326,6 +343,9 @@ func (c *Collection) Delete(filter map[string]any) *Delete {
 
 // One is a method available in Delete(), it deletes a record and returns an error if any.
 func (d *Delete) One() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	if d.objMaps == nil {
 		return ErrFilterParams
 	}
@@ -358,6 +378,9 @@ func (d *Delete) One() error {
 
 // All is a method available in Delete(), it deletes matching records from the filter and returns an error if any.
 func (d *Delete) All() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	if d.objMaps == nil {
 		MemgodbStorage = MemgodbStorage[:0]
 		return nil
@@ -400,6 +423,7 @@ func (c *Collection) Update(filter, obj map[string]any) *Update {
 	}
 
 	return &Update{
+		mu:         c.mu,
 		objMaps:    objMaps,
 		filter:     filter,
 		update:     obj,
@@ -409,6 +433,9 @@ func (c *Collection) Update(filter, obj map[string]any) *Update {
 
 // One is a method available in Update(), it updates matching records from the filter, makes the necessary updates and returns an error if any.
 func (u *Update) One() error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
 	if u.objMaps == nil {
 		return ErrFilterParams
 	}
@@ -442,7 +469,7 @@ func (u *Update) One() error {
 }
 
 // LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
-func (*Memgodb) LoadDefault() error {
+func (mg *Memgodb) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
@@ -492,7 +519,7 @@ func (*Memgodb) LoadDefault() error {
 // Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
 // This method will make sure all your data are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
-func (*Memgodb) Persist() error {
+func (mg *Memgodb) Persist() error {
 	if MemgodbStorage == nil {
 		return nil
 	}
