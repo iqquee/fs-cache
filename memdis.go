@@ -78,17 +78,11 @@ func (md *Memdis) GetMany(keys []string) []map[string]any {
 
 // Del() deletes a data from the in-memory storage
 func (md *Memdis) Del(key string) error {
-	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[key]; ok {
-			isFound = true
 			md.storage = append(md.storage[:index], md.storage[index+1:]...)
 			return nil
 		}
-	}
-
-	if !isFound {
-		return ErrKeyNotFound
 	}
 
 	return ErrKeyNotFound
