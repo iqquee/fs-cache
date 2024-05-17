@@ -8,9 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var (
-	debug bool
-)
+var debug bool
 
 type (
 	// MemdisData object

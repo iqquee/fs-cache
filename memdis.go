@@ -61,7 +61,7 @@ func (md *Memdis) Get(key string) (interface{}, error) {
 
 // GetMany() retrieves data with matching keys from the in-memory storage
 func (md *Memdis) GetMany(keys []string) []map[string]interface{} {
-	var keyValuePairs = []map[string]interface{}{}
+	keyValuePairs := []map[string]interface{}{}
 
 	for _, cache := range md.storage {
 		data := make(map[string]interface{})
@@ -210,7 +210,7 @@ func (md *Memdis) TypeOf(key string) (string, error) {
 
 // KeyValuePairs() returns an array of key value pairs of all the data in the storage
 func (md *Memdis) KeyValuePairs() []map[string]interface{} {
-	var keyValuePairs = []map[string]interface{}{}
+	keyValuePairs := []map[string]interface{}{}
 
 	for _, v := range md.storage {
 		data := make(map[string]interface{})
