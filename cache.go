@@ -1,10 +1,10 @@
 package fscache
 
 import (
+	"context"
 	"os"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog"
 )
 
@@ -68,42 +68,49 @@ func New() Operations {
 		MemgodbInstance: Memgodb,
 	}
 
-	c := cron.New()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// cron job set to run every 1 minute
-	c.AddFunc("*/1 * * * *", func() {
-		if debug {
-			logger.Info().Msg("cron job running...")
-		}
+	go func() { // launch "cron job"
+		for {
+			// wait for context cancellation
+			select {
+			case <-ctx.Done():
+				return
 
-		if persistMemgodbData {
-			if err := ch.MemgodbInstance.Persist(); err != nil {
-				if debug {
-					logger.Info().Msgf("persist error: %v", err)
-				}
+			// wait 1 minute before continuing
+			case <-time.After(1 * time.Minute):
 			}
-		}
 
-		for i := 0; i < len(ch.MemdisInstance.storage); i++ {
-			for _, value := range ch.MemdisInstance.storage[i] {
-				currenctTime := time.Now()
-				if currenctTime.Before(value.Duration) {
+			// cron job set to run every 1 minute
+			if debug {
+				logger.Info().Msg("cron job running...")
+			}
+
+			if persistMemgodbData {
+				if err := ch.MemgodbInstance.Persist(); err != nil {
 					if debug {
-						logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
+						logger.Info().Msgf("persist error: %v", err)
 					}
-					// take the data from off the array object
-					ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
-					// decrement the array index by 1 since an object have been taken off the array
-					i--
+				}
+			}
+
+			for i := 0; i < len(ch.MemdisInstance.storage); i++ {
+				for _, value := range ch.MemdisInstance.storage[i] {
+					currenctTime := time.Now()
+					if currenctTime.Before(value.Duration) {
+						if debug {
+							logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
+						}
+						// take the data from off the array object
+						ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
+						// decrement the array index by 1 since an object have been taken off the array
+						i--
+					}
 				}
 			}
 		}
-	})
-
-	c.Start()
-	if debug {
-		logger.Info().Msgf("cron job entries ::: %v", c.Entries())
-	}
+	}()
 
 	op := Operations(&ch)
 	return op
