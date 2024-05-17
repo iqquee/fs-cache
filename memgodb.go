@@ -442,7 +442,7 @@ func (u *Update) One() error {
 }
 
 // LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
-func (n *Memgodb) LoadDefault() error {
+func (*Memgodb) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
@@ -491,8 +491,8 @@ func (n *Memgodb) LoadDefault() error {
 
 // Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
-// This method will make sure all your your data's are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
-func (n *Memgodb) Persist() error {
+// This method will make sure all your data are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
+func (*Memgodb) Persist() error {
 	if MemgodbStorage == nil {
 		return nil
 	}
@@ -518,7 +518,7 @@ func (n *Memgodb) Persist() error {
 }
 
 // decode decodes an any into a map[string]any
-func (c *Collection) decode(obj any) (map[string]any, error) {
+func (*Collection) decode(obj any) (map[string]any, error) {
 	objMap := make(map[string]any)
 	jsonObj, err := json.Marshal(obj)
 	if err != nil {
@@ -533,7 +533,7 @@ func (c *Collection) decode(obj any) (map[string]any, error) {
 }
 
 // decodeMany decodes an any into an []map[string]any
-func (c *Collection) decodeMany(arr any) ([]map[string]any, error) {
+func (*Collection) decodeMany(arr any) ([]map[string]any, error) {
 	var arrObjs []map[string]any
 	arrObj, err := json.Marshal(arr)
 	if err != nil {

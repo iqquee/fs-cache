@@ -108,7 +108,7 @@ func New() Operations {
 }
 
 // Debug() enables debug to get certain logs
-func (c *Cache) Debug() {
+func (*Cache) Debug() {
 	debug = true
 }
 
