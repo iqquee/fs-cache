@@ -37,7 +37,7 @@ type (
 		MemgodbInstance Memgodb
 	}
 
-	// Operations lists all available operations on the fscache
+	// Operations lists all available operations on the fs-cache
 	Operations interface {
 		// Debug() enables debug to get certain logs
 		Debug()

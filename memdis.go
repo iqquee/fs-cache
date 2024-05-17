@@ -10,10 +10,10 @@ var (
 	// errKeyNotFound key not found
 	errKeyNotFound = errors.New("key not found")
 	// errKeyExists key already exists
-	errKeyExists = errors.New("key already exist")
+	errKeyExists = errors.New("key already exists")
 )
 
-// Set() adds a new data into the in-memmory storage
+// Set() adds a new data into the in-memory storage
 func (md *Memdis) Set(key string, value interface{}, duration ...time.Duration) error {
 	for _, cache := range md.storage {
 		if _, ok := cache[key]; ok {
@@ -48,7 +48,7 @@ func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]interface{
 	return KeyValuePairs, nil
 }
 
-// Get() retrieves a data from the in-memmory storage
+// Get() retrieves a data from the in-memory storage
 func (md *Memdis) Get(key string) (interface{}, error) {
 	for _, cache := range md.storage {
 		if val, ok := cache[key]; ok {
@@ -59,7 +59,7 @@ func (md *Memdis) Get(key string) (interface{}, error) {
 	return nil, errKeyNotFound
 }
 
-// GetMany() retrieves datas with matching keys from the in-memmory storage
+// GetMany() retrieves data with matching keys from the in-memory storage
 func (md *Memdis) GetMany(keys []string) []map[string]interface{} {
 	var keyValuePairs = []map[string]interface{}{}
 
@@ -76,7 +76,7 @@ func (md *Memdis) GetMany(keys []string) []map[string]interface{} {
 	return keyValuePairs
 }
 
-// Del() deletes a data from the in-memmory storage
+// Del() deletes a data from the in-memory storage
 func (md *Memdis) Del(key string) error {
 	var isFound bool
 	for index, cache := range md.storage {
@@ -94,14 +94,14 @@ func (md *Memdis) Del(key string) error {
 	return errKeyNotFound
 }
 
-// Clear() deletes all datas from the in-memmory storage
+// Clear() deletes all data from the in-memory storage
 func (md *Memdis) Clear() error {
 	md.storage = md.storage[:0]
 
 	return nil
 }
 
-// Size() retrieves the total data objects in the in-memmory storage
+// Size() retrieves the total data objects in the in-memory storage
 func (md *Memdis) Size() int {
 	return len(md.storage)
 }
@@ -208,7 +208,7 @@ func (md *Memdis) TypeOf(key string) (string, error) {
 	return "", errKeyNotFound
 }
 
-// KeyValuePairs() returns an array of key value pairs of all the datas in the storage
+// KeyValuePairs() returns an array of key value pairs of all the data in the storage
 func (md *Memdis) KeyValuePairs() []map[string]interface{} {
 	var keyValuePairs = []map[string]interface{}{}
 

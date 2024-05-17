@@ -19,7 +19,7 @@ fscache "github.com/iqquee/fs-cache"
 Memdis gives you a Redis-like feature similarly as you would with a Redis database.
 
 ### Set()
-Set() adds a new data into the in-memmory storage
+Set() adds a new data into the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -30,7 +30,7 @@ if err := fs.Memdis().Set("key1", "user1", 5*time.Minute); err != nil {
 ```
 
 ### Get()
-Get() retrieves a data from the in-memmory storage
+Get() retrieves a data from the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -46,9 +46,9 @@ fmt.Println("key1:", result)
 Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database.
 
 ### Persist()
-Persist is used to write data to file. All datas will be saved into a json file.
+Persist is used to write data to file. All data will be saved into a JSON file.
 
-This method will make sure all your your data's are saved. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
+This method will make sure all your data are saved. A cronjob runs ever minute and writes your data into a JSON file to ensure data integrity
 ```go
 fs := fscache.New()
 
@@ -72,7 +72,7 @@ type User struct {
 fs := fscache.New()
 
 var user User
-user.Name = "jane doe" 
+user.Name = "jane doe"
 user.Age = 20
 
 res, err := fs.Memgodb().Collection(User{}).Insert(user).One()
@@ -102,7 +102,7 @@ if err := fs.Memgodb().Collection("user").Insert(nil).Many(users); err != nil {
 }
 ```
 - ### FromJsonFile()
-FromJsonFile is a method available in Insert(). It adds record(s) into the storage from a json file
+FromJsonFile is a method available in Insert(). It adds record(s) into the storage from a JSON file
 ```go
 fs := fscache.New()
 
@@ -162,4 +162,4 @@ fmt.Println(allRecords)
 For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example)
 
 ## Contributions
-Anyone can contribute to this library ;). So, feel free to improve on and add new feaures. I await your pull requests.
+Anyone can contribute to this library ;). So, feel free to improve on and add new features. I await your pull requests.
