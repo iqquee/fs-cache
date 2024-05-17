@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // memdis test cases
@@ -37,11 +38,11 @@ func TestSet(t *testing.T) {
 		MemdisInstance: md,
 	}
 
-	if err := ch.Memdis().Set("key1", "value1", time.Minute); err != nil {
-		assert.Error(t, err)
-	}
+	err := ch.Memdis().Set("missing_key", "value1", time.Minute)
+	require.NoError(t, err)
 
-	assert.NoError(t, nil)
+	err = ch.Memdis().Set("key1", "value1", time.Minute)
+	require.Error(t, err) // this one exists, it raises an error
 }
 
 func TestGet(t *testing.T) {
@@ -53,11 +54,11 @@ func TestGet(t *testing.T) {
 	}
 
 	value, err := ch.Memdis().Get("key1")
-	if err != nil {
-		assert.Error(t, err)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, "value1", value)
 
-	assert.EqualValues(t, "value1", value)
+	_, err = ch.Memdis().Get("missing_key")
+	require.ErrorIs(t, err, ErrKeyNotFound)
 }
 
 func TestDel(t *testing.T) {
@@ -68,11 +69,8 @@ func TestDel(t *testing.T) {
 		MemdisInstance: md,
 	}
 
-	if err := ch.Memdis().Del("key1"); err != nil {
-		assert.Error(t, err)
-	}
-
-	assert.NoError(t, nil)
+	err := ch.Memdis().Del("key1")
+	require.NoError(t, err)
 }
 
 func TestClear(t *testing.T) {
@@ -83,11 +81,8 @@ func TestClear(t *testing.T) {
 		MemdisInstance: md,
 	}
 
-	if err := ch.Memdis().Clear(); err != nil {
-		assert.Error(t, err)
-	}
-
-	assert.NoError(t, nil)
+	err := ch.Memdis().Clear()
+	require.NoError(t, err)
 }
 
 func TestSize(t *testing.T) {
@@ -111,7 +106,7 @@ func TestDebug(t *testing.T) {
 	}
 
 	ch.Debug()
-	assert.EqualValues(t, true, debug)
+	assert.True(t, debug)
 }
 
 func TestOverWrite(t *testing.T) {
@@ -193,10 +188,7 @@ func TestSetMany(t *testing.T) {
 	}
 
 	data, err := ch.Memdis().SetMany(testCase)
-	if err != nil {
-		assert.Error(t, err)
-	}
-
+	require.NoError(t, err)
 	assert.NotNil(t, data)
 }
 
