@@ -7,17 +7,17 @@ import (
 )
 
 var (
-	// errKeyNotFound key not found
-	errKeyNotFound = errors.New("key not found")
-	// errKeyExists key already exists
-	errKeyExists = errors.New("key already exists")
+	// ErrKeyNotFound key not found
+	ErrKeyNotFound = errors.New("key not found")
+	// ErrKeyExists key already exists
+	ErrKeyExists = errors.New("key already exist")
 )
 
 // Set() adds a new data into the in-memory storage
 func (md *Memdis) Set(key string, value any, duration ...time.Duration) error {
 	for _, cache := range md.storage {
 		if _, ok := cache[key]; ok {
-			return errKeyExists
+			return ErrKeyExists
 		}
 	}
 
@@ -56,7 +56,7 @@ func (md *Memdis) Get(key string) (any, error) {
 		}
 	}
 
-	return nil, errKeyNotFound
+	return nil, ErrKeyNotFound
 }
 
 // GetMany() retrieves data with matching keys from the in-memory storage
@@ -88,10 +88,10 @@ func (md *Memdis) Del(key string) error {
 	}
 
 	if !isFound {
-		return errKeyNotFound
+		return ErrKeyNotFound
 	}
 
-	return errKeyNotFound
+	return ErrKeyNotFound
 }
 
 // Clear() deletes all data from the in-memory storage
@@ -117,7 +117,7 @@ func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) er
 	}
 
 	if !isFound {
-		return errKeyNotFound
+		return ErrKeyNotFound
 	}
 
 	var ttl time.Duration
@@ -150,7 +150,7 @@ func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value any, duration .
 	}
 
 	if !isFound {
-		return errKeyNotFound
+		return ErrKeyNotFound
 	}
 
 	var ttl time.Duration
@@ -205,7 +205,7 @@ func (md *Memdis) TypeOf(key string) (string, error) {
 		}
 	}
 
-	return "", errKeyNotFound
+	return "", ErrKeyNotFound
 }
 
 // KeyValuePairs() returns an array of key value pairs of all the data in the storage

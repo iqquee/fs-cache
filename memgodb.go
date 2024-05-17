@@ -21,6 +21,13 @@ var (
 	persistMemgodbData bool
 )
 
+var (
+	// ErrRecordNotFound record not found
+	ErrRecordNotFound = errors.New("record not found")
+	// ErrFilterParams filter params cannot be nil
+	ErrFilterParams = errors.New("filter params cannot be nil")
+)
+
 type (
 	// Collection object
 	Collection struct {
@@ -234,7 +241,7 @@ func (c *Collection) Filter(filter map[string]any) *Filter {
 // First is a method available in Filter(), it returns the first matching record from the filter.
 func (f *Filter) First() (map[string]any, error) {
 	if f.objMaps == nil {
-		return nil, errors.New("filter params cannot be nil")
+		return nil, ErrFilterParams
 	}
 
 	notFound := true
@@ -256,7 +263,7 @@ func (f *Filter) First() (map[string]any, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("record not found")
+		return nil, ErrRecordNotFound
 	}
 
 	return foundObj, nil
@@ -292,7 +299,7 @@ func (f *Filter) All() ([]map[string]any, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("record not found")
+		return nil, ErrRecordNotFound
 	}
 
 	return foundObj, nil
@@ -320,7 +327,7 @@ func (c *Collection) Delete(filter map[string]any) *Delete {
 // One is a method available in Delete(), it deletes a record and returns an error if any.
 func (d *Delete) One() error {
 	if d.objMaps == nil {
-		return errors.New("filter params cannot be nil")
+		return ErrFilterParams
 	}
 
 	notFound := true
@@ -343,7 +350,7 @@ func (d *Delete) One() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
@@ -374,7 +381,7 @@ func (d *Delete) All() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
@@ -403,7 +410,7 @@ func (c *Collection) Update(filter, obj map[string]any) *Update {
 // One is a method available in Update(), it updates matching records from the filter, makes the necessary updates and returns an error if any.
 func (u *Update) One() error {
 	if u.objMaps == nil {
-		return errors.New("filter params cannot be nil")
+		return ErrFilterParams
 	}
 
 	notFound := true
@@ -428,7 +435,7 @@ func (u *Update) One() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
