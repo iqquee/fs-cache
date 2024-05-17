@@ -7,17 +7,17 @@ import (
 )
 
 var (
-	// errKeyNotFound key not found
-	errKeyNotFound = errors.New("key not found")
-	// errKeyExists key already exists
-	errKeyExists = errors.New("key already exists")
+	// ErrKeyNotFound key not found
+	ErrKeyNotFound = errors.New("key not found")
+	// ErrKeyExists key already exists
+	ErrKeyExists = errors.New("key already exist")
 )
 
 // Set() adds a new data into the in-memory storage
-func (md *Memdis) Set(key string, value interface{}, duration ...time.Duration) error {
+func (md *Memdis) Set(key string, value any, duration ...time.Duration) error {
 	for _, cache := range md.storage {
 		if _, ok := cache[key]; ok {
-			return errKeyExists
+			return ErrKeyExists
 		}
 	}
 
@@ -41,7 +41,7 @@ func (md *Memdis) Set(key string, value interface{}, duration ...time.Duration) 
 }
 
 // SetMany() sets many data objects into memory for later access
-func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]interface{}, error) {
+func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]any, error) {
 	md.storage = append(md.storage, data...)
 	KeyValuePairs := md.KeyValuePairs()
 
@@ -49,22 +49,22 @@ func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]interface{
 }
 
 // Get() retrieves a data from the in-memory storage
-func (md *Memdis) Get(key string) (interface{}, error) {
+func (md *Memdis) Get(key string) (any, error) {
 	for _, cache := range md.storage {
 		if val, ok := cache[key]; ok {
 			return val.Value, nil
 		}
 	}
 
-	return nil, errKeyNotFound
+	return nil, ErrKeyNotFound
 }
 
 // GetMany() retrieves data with matching keys from the in-memory storage
-func (md *Memdis) GetMany(keys []string) []map[string]interface{} {
-	var keyValuePairs = []map[string]interface{}{}
+func (md *Memdis) GetMany(keys []string) []map[string]any {
+	keyValuePairs := []map[string]any{}
 
 	for _, cache := range md.storage {
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		for _, key := range keys {
 			if val, ok := cache[key]; ok {
 				data[key] = val.Value
@@ -78,20 +78,14 @@ func (md *Memdis) GetMany(keys []string) []map[string]interface{} {
 
 // Del() deletes a data from the in-memory storage
 func (md *Memdis) Del(key string) error {
-	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[key]; ok {
-			isFound = true
 			md.storage = append(md.storage[:index], md.storage[index+1:]...)
 			return nil
 		}
 	}
 
-	if !isFound {
-		return errKeyNotFound
-	}
-
-	return errKeyNotFound
+	return ErrKeyNotFound
 }
 
 // Clear() deletes all data from the in-memory storage
@@ -107,7 +101,7 @@ func (md *Memdis) Size() int {
 }
 
 // OverWrite() updates an already set value using it key
-func (md *Memdis) OverWrite(key string, value interface{}, duration ...time.Duration) error {
+func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) error {
 	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[key]; ok {
@@ -117,7 +111,7 @@ func (md *Memdis) OverWrite(key string, value interface{}, duration ...time.Dura
 	}
 
 	if !isFound {
-		return errKeyNotFound
+		return ErrKeyNotFound
 	}
 
 	var ttl time.Duration
@@ -140,7 +134,7 @@ func (md *Memdis) OverWrite(key string, value interface{}, duration ...time.Dura
 }
 
 // OverWriteWithKey() updates an already set value and key using the previously set key
-func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value interface{}, duration ...time.Duration) error {
+func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value any, duration ...time.Duration) error {
 	var isFound bool
 	for index, cache := range md.storage {
 		if _, ok := cache[prevkey]; ok {
@@ -150,7 +144,7 @@ func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value interface{}, du
 	}
 
 	if !isFound {
-		return errKeyNotFound
+		return ErrKeyNotFound
 	}
 
 	var ttl time.Duration
@@ -185,8 +179,8 @@ func (md *Memdis) Keys() []string {
 }
 
 // Values() returns all the values in the storage
-func (md *Memdis) Values() []interface{} {
-	var values []interface{}
+func (md *Memdis) Values() []any {
+	var values []any
 	for _, cache := range md.storage {
 		for _, v := range cache {
 			values = append(values, v.Value)
@@ -205,15 +199,15 @@ func (md *Memdis) TypeOf(key string) (string, error) {
 		}
 	}
 
-	return "", errKeyNotFound
+	return "", ErrKeyNotFound
 }
 
 // KeyValuePairs() returns an array of key value pairs of all the data in the storage
-func (md *Memdis) KeyValuePairs() []map[string]interface{} {
-	var keyValuePairs = []map[string]interface{}{}
+func (md *Memdis) KeyValuePairs() []map[string]any {
+	keyValuePairs := []map[string]any{}
 
 	for _, v := range md.storage {
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		for key, value := range v {
 			data[key] = value.Value
 		}

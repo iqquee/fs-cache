@@ -16,9 +16,16 @@ import (
 
 var (
 	// MemgodbStorage storage instance
-	MemgodbStorage []interface{}
+	MemgodbStorage []any
 	// persistMemgodbData to enable persistence of Memgodb data
 	persistMemgodbData bool
+)
+
+var (
+	// ErrRecordNotFound record not found
+	ErrRecordNotFound = errors.New("record not found")
+	// ErrFilterParams filter params cannot be nil
+	ErrFilterParams = errors.New("filter params cannot be nil")
 )
 
 type (
@@ -30,21 +37,21 @@ type (
 
 	// Insert object implements One() and Many() to insert new records
 	Insert struct {
-		obj        interface{}
+		obj        any
 		collection Collection
 	}
 
 	// Filter object implements One() and All()
 	Filter struct {
-		objMaps    []map[string]interface{}
-		filter     map[string]interface{}
+		objMaps    []map[string]any
+		filter     map[string]any
 		collection Collection
 	}
 
 	// Delete object implements One() and All()
 	Delete struct {
-		objMaps    []map[string]interface{}
-		filter     map[string]interface{}
+		objMaps    []map[string]any
+		filter     map[string]any
 		collection Collection
 	}
 
@@ -55,15 +62,15 @@ type (
 
 	// Update object implements One() and All()
 	Update struct {
-		objMaps    []map[string]interface{}
-		filter     map[string]interface{}
-		update     map[string]interface{}
+		objMaps    []map[string]any
+		filter     map[string]any
+		update     map[string]any
 		collection Collection
 	}
 )
 
 // Collection defines the collection(table) name to perform an operation on it
-func (ns *Memgodb) Collection(col interface{}) *Collection {
+func (ns *Memgodb) Collection(col any) *Collection {
 	t := reflect.TypeOf(col)
 
 	// run validation
@@ -99,7 +106,7 @@ func (ns *Memgodb) Collection(col interface{}) *Collection {
 }
 
 // Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
-func (c *Collection) Insert(obj interface{}) *Insert {
+func (c *Collection) Insert(obj any) *Insert {
 	return &Insert{
 		obj:        obj,
 		collection: *c,
@@ -107,7 +114,7 @@ func (c *Collection) Insert(obj interface{}) *Insert {
 }
 
 // One is a method available in Insert(). It adds a new record into the storage with collection name
-func (i *Insert) One() (interface{}, error) {
+func (i *Insert) One() (any, error) {
 	if i.obj == nil {
 		return nil, errors.New("One() params cannot be nil")
 	}
@@ -133,7 +140,7 @@ func (i *Insert) One() (interface{}, error) {
 }
 
 // Many is a method available in Insert(). It adds many records into the storage at once
-func (i *Insert) Many(arr interface{}) ([]interface{}, error) {
+func (i *Insert) Many(arr any) ([]any, error) {
 	if i.obj != nil {
 		return nil, errors.New("Many() params must be nil to insert Many")
 	}
@@ -149,7 +156,7 @@ func (i *Insert) Many(arr interface{}) ([]interface{}, error) {
 		return nil, err
 	}
 
-	var savedData []interface{}
+	var savedData []any
 	for _, obj := range arrObjs {
 		saved, err := i.collection.Insert(obj).One()
 		if err != nil {
@@ -179,7 +186,7 @@ func (i *Insert) FromJsonFile(fileLocation string) error {
 		return err
 	}
 
-	var obj interface{}
+	var obj any
 	if err := json.Unmarshal(fileByte, &obj); err != nil {
 		return errors.New("invalid json file")
 	}
@@ -213,8 +220,8 @@ func (i *Insert) FromJsonFile(fileLocation string) error {
 }
 
 // Filter is used to filter records from the storage. It has two methods which are First() and All().
-func (c *Collection) Filter(filter map[string]interface{}) *Filter {
-	var objMaps []map[string]interface{}
+func (c *Collection) Filter(filter map[string]any) *Filter {
+	var objMaps []map[string]any
 	var err error
 
 	if filter != nil {
@@ -232,13 +239,13 @@ func (c *Collection) Filter(filter map[string]interface{}) *Filter {
 }
 
 // First is a method available in Filter(), it returns the first matching record from the filter.
-func (f *Filter) First() (map[string]interface{}, error) {
+func (f *Filter) First() (map[string]any, error) {
 	if f.objMaps == nil {
-		return nil, errors.New("filter params cannot be nil")
+		return nil, ErrFilterParams
 	}
 
 	notFound := true
-	var foundObj map[string]interface{}
+	var foundObj map[string]any
 	counter := 0
 	for _, item := range f.objMaps {
 		for key, val := range f.filter {
@@ -256,16 +263,16 @@ func (f *Filter) First() (map[string]interface{}, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("record not found")
+		return nil, ErrRecordNotFound
 	}
 
 	return foundObj, nil
 }
 
 // All is a method available in Filter(), it returns all the matching records from the filter.
-func (f *Filter) All() ([]map[string]interface{}, error) {
+func (f *Filter) All() ([]map[string]any, error) {
 	if f.objMaps == nil {
-		var objMaps []map[string]interface{}
+		var objMaps []map[string]any
 		arrObj, err := json.Marshal(MemgodbStorage)
 		if err != nil {
 			return nil, err
@@ -279,7 +286,7 @@ func (f *Filter) All() ([]map[string]interface{}, error) {
 	}
 
 	notFound := true
-	var foundObj []map[string]interface{}
+	var foundObj []map[string]any
 	for _, item := range f.objMaps {
 		for key, val := range f.filter {
 			if item["colName"] == f.collection.collectionName {
@@ -292,15 +299,15 @@ func (f *Filter) All() ([]map[string]interface{}, error) {
 	}
 
 	if notFound {
-		return nil, errors.New("record not found")
+		return nil, ErrRecordNotFound
 	}
 
 	return foundObj, nil
 }
 
 // Delete is used to delete a new record from the storage. It has two methods which are One() and Many().
-func (c *Collection) Delete(filter map[string]interface{}) *Delete {
-	var objMaps []map[string]interface{}
+func (c *Collection) Delete(filter map[string]any) *Delete {
+	var objMaps []map[string]any
 	var err error
 
 	if filter != nil {
@@ -320,7 +327,7 @@ func (c *Collection) Delete(filter map[string]interface{}) *Delete {
 // One is a method available in Delete(), it deletes a record and returns an error if any.
 func (d *Delete) One() error {
 	if d.objMaps == nil {
-		return errors.New("filter params cannot be nil")
+		return ErrFilterParams
 	}
 
 	notFound := true
@@ -343,7 +350,7 @@ func (d *Delete) One() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
@@ -374,15 +381,15 @@ func (d *Delete) All() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
 }
 
 // Update is used to update an existing record in the storage. It has a method which is One().
-func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
-	var objMaps []map[string]interface{}
+func (c *Collection) Update(filter, obj map[string]any) *Update {
+	var objMaps []map[string]any
 	var err error
 
 	if filter != nil {
@@ -403,7 +410,7 @@ func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
 // One is a method available in Update(), it updates matching records from the filter, makes the necessary updates and returns an error if any.
 func (u *Update) One() error {
 	if u.objMaps == nil {
-		return errors.New("filter params cannot be nil")
+		return ErrFilterParams
 	}
 
 	notFound := true
@@ -428,14 +435,14 @@ func (u *Update) One() error {
 	}
 
 	if notFound {
-		return errors.New("record not found")
+		return ErrRecordNotFound
 	}
 
 	return nil
 }
 
 // LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
-func (n *Memgodb) LoadDefault() error {
+func (*Memgodb) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
@@ -447,14 +454,14 @@ func (n *Memgodb) LoadDefault() error {
 		return err
 	}
 
-	var obj interface{}
+	var obj any
 	if err := json.Unmarshal(fileByte, &obj); err != nil {
 		return errors.New("invalid json file")
 	}
 
 	t := reflect.TypeOf(obj)
 	if t.Kind() == reflect.Slice {
-		var objMap []interface{}
+		var objMap []any
 		jsonByte, err := json.Marshal(obj)
 		if err != nil {
 			return err
@@ -466,7 +473,7 @@ func (n *Memgodb) LoadDefault() error {
 
 		MemgodbStorage = append(MemgodbStorage, objMap...)
 	} else if t.Kind() == reflect.Map {
-		var objMap interface{}
+		var objMap any
 		jsonByte, err := json.Marshal(obj)
 		if err != nil {
 			return err
@@ -484,8 +491,8 @@ func (n *Memgodb) LoadDefault() error {
 
 // Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
-// This method will make sure all your your data's are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
-func (n *Memgodb) Persist() error {
+// This method will make sure all your data are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
+func (*Memgodb) Persist() error {
 	if MemgodbStorage == nil {
 		return nil
 	}
@@ -510,9 +517,9 @@ func (n *Memgodb) Persist() error {
 	return nil
 }
 
-// decode decodes an interface{} into a map[string]interface{}
-func (c *Collection) decode(obj interface{}) (map[string]interface{}, error) {
-	objMap := make(map[string]interface{})
+// decode decodes an any into a map[string]any
+func (*Collection) decode(obj any) (map[string]any, error) {
+	objMap := make(map[string]any)
 	jsonObj, err := json.Marshal(obj)
 	if err != nil {
 		return nil, err
@@ -525,9 +532,9 @@ func (c *Collection) decode(obj interface{}) (map[string]interface{}, error) {
 	return objMap, nil
 }
 
-// decodeMany decodes an interface{} into an []map[string]interface{}
-func (c *Collection) decodeMany(arr interface{}) ([]map[string]interface{}, error) {
-	var arrObjs []map[string]interface{}
+// decodeMany decodes an any into an []map[string]any
+func (*Collection) decodeMany(arr any) ([]map[string]any, error) {
+	var arrObjs []map[string]any
 	arrObj, err := json.Marshal(arr)
 	if err != nil {
 		return nil, err
