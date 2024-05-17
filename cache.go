@@ -13,7 +13,7 @@ var debug bool
 type (
 	// MemdisData object
 	MemdisData struct {
-		Value    interface{}
+		Value    any
 		Duration time.Time
 	}
 

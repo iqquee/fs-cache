@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var MemgodbTestCases = []interface{}{
+var MemgodbTestCases = []any{
 	struct {
 		Name string `json:"name"`
 		Age  int    `json:"age"`
@@ -16,12 +16,12 @@ var MemgodbTestCases = []interface{}{
 		Name: "Jane Doe",
 		Age:  25,
 	},
-	map[string]interface{}{
+	map[string]any{
 		"name":    "John Doe",
 		"age":     35,
 		"colName": "users",
 	},
-	map[string]interface{}{
+	map[string]any{
 		"name":    "Jane Dice",
 		"age":     35,
 		"colName": "users",
@@ -127,7 +127,7 @@ func Test__Filter_First(t *testing.T) {
 		name          string
 		expectedError error
 		message       string
-		filter        map[string]interface{}
+		filter        map[string]any
 	}{
 		{
 			name:          "nil params",
@@ -139,13 +139,13 @@ func Test__Filter_First(t *testing.T) {
 			name:          "not nil params",
 			expectedError: nil,
 			message:       "success",
-			filter:        map[string]interface{}{"age": 35.0}, // filter out records of age 35
+			filter:        map[string]any{"age": 35.0}, // filter out records of age 35
 		},
 		{
 			name:          "incorrect params",
 			expectedError: errors.New("record not found"),
 			message:       "fail_2",
-			filter:        map[string]interface{}{"age": 0},
+			filter:        map[string]any{"age": 0},
 		},
 	}
 
@@ -177,19 +177,19 @@ func Test_Filter_All(t *testing.T) {
 		name          string
 		expectedError error
 		message       string
-		filter        map[string]interface{}
+		filter        map[string]any
 	}{
 		{
 			name:          "not nil params",
 			expectedError: nil,
 			message:       "success",
-			filter:        map[string]interface{}{"age": 35.0}, // filter out records of age 35
+			filter:        map[string]any{"age": 35.0}, // filter out records of age 35
 		},
 		{
 			name:          "incorrect params",
 			expectedError: errors.New("record not found"),
 			message:       "fail",
-			filter:        map[string]interface{}{"age": 0},
+			filter:        map[string]any{"age": 0},
 		},
 	}
 
@@ -215,7 +215,7 @@ func Test_Delete_One(t *testing.T) {
 	}
 	assert.NotNil(t, res)
 
-	filters := []map[string]interface{}{
+	filters := []map[string]any{
 		{"age": 35.0}, // filter out record of age 35
 
 		nil, // for nil params
@@ -248,7 +248,7 @@ func Test_Delete_All(t *testing.T) {
 	}
 	assert.NotNil(t, res)
 
-	filters := []map[string]interface{}{
+	filters := []map[string]any{
 		{"age": 35.0}, // filter out records of age 35
 		nil,           // for nil params
 	}
@@ -283,18 +283,18 @@ func Test_Update_One(t *testing.T) {
 	testCases := []struct {
 		expectedError error
 		name          string
-		filter        map[string]interface{}
+		filter        map[string]any
 		message       string
-		update        map[string]interface{}
+		update        map[string]any
 	}{
 		{
 			name:          "correct filter params",
 			expectedError: nil,
 			message:       "success",
-			filter: map[string]interface{}{
+			filter: map[string]any{
 				"age": 35.0,
 			},
-			update: map[string]interface{}{
+			update: map[string]any{
 				"age": 29,
 			},
 		},
@@ -303,7 +303,7 @@ func Test_Update_One(t *testing.T) {
 			expectedError: errors.New("filter params cannot be nil"),
 			message:       "failed_1",
 			filter:        nil,
-			update: map[string]interface{}{
+			update: map[string]any{
 				"age": 28,
 			},
 		},
@@ -311,10 +311,10 @@ func Test_Update_One(t *testing.T) {
 			name:          "not found params",
 			expectedError: errors.New("record not found"),
 			message:       "failed_2",
-			filter: map[string]interface{}{
+			filter: map[string]any{
 				"age": 300.0,
 			},
-			update: map[string]interface{}{
+			update: map[string]any{
 				"age": 28,
 			},
 		},
