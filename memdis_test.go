@@ -168,8 +168,8 @@ func TestKeyValuePairs(t *testing.T) {
 		MemdisInstance: md,
 	}
 
-	datas := ch.Memdis().KeyValuePairs()
-	assert.NotNil(t, datas)
+	data := ch.Memdis().KeyValuePairs()
+	assert.NotNil(t, data)
 }
 
 func TestSetMany(t *testing.T) {
@@ -192,12 +192,12 @@ func TestSetMany(t *testing.T) {
 		},
 	}
 
-	datas, err := ch.Memdis().SetMany(testCase)
+	data, err := ch.Memdis().SetMany(testCase)
 	if err != nil {
 		assert.Error(t, err)
 	}
 
-	assert.NotNil(t, datas)
+	assert.NotNil(t, data)
 }
 
 func TestGetMany(t *testing.T) {

@@ -28,20 +28,20 @@ type (
 		collectionName string
 	}
 
-	// Insert object implementes One() and Many() to insert new records
+	// Insert object implements One() and Many() to insert new records
 	Insert struct {
 		obj        interface{}
 		collection Collection
 	}
 
-	// Filter object implementes One() and All()
+	// Filter object implements One() and All()
 	Filter struct {
 		objMaps    []map[string]interface{}
 		filter     map[string]interface{}
 		collection Collection
 	}
 
-	// Delete object implementes One() and All()
+	// Delete object implements One() and All()
 	Delete struct {
 		objMaps    []map[string]interface{}
 		filter     map[string]interface{}
@@ -53,7 +53,7 @@ type (
 		Error error
 	}
 
-	// Update object implementes One() and All()
+	// Update object implements One() and All()
 	Update struct {
 		objMaps    []map[string]interface{}
 		filter     map[string]interface{}
@@ -62,7 +62,7 @@ type (
 	}
 )
 
-// Collection defines the collection(table) name to perform an operations on
+// Collection defines the collection(table) name to perform an operation on it
 func (ns *Memgodb) Collection(col interface{}) *Collection {
 	t := reflect.TypeOf(col)
 
@@ -162,7 +162,7 @@ func (i *Insert) Many(arr interface{}) ([]interface{}, error) {
 	return savedData, nil
 }
 
-// FromJsonFile is a method available in Insert(). It adds records into the storage from a json file
+// FromJsonFile is a method available in Insert(). It adds records into the storage from a JSON file
 func (i *Insert) FromJsonFile(fileLocation string) error {
 	if i.obj != nil {
 		return errors.New("FromFile() params must be nil to insert from file")
@@ -380,7 +380,7 @@ func (d *Delete) All() error {
 	return nil
 }
 
-// Update is used to update a existing record in the storage. It has a method which is One().
+// Update is used to update an existing record in the storage. It has a method which is One().
 func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
 	var objMaps []map[string]interface{}
 	var err error
@@ -400,7 +400,7 @@ func (c *Collection) Update(filter, obj map[string]interface{}) *Update {
 	}
 }
 
-// One is a method available in Update(), it updates matching records from the filter, makes the necessry updated and returns an error if any.
+// One is a method available in Update(), it updates matching records from the filter, makes the necessary updates and returns an error if any.
 func (u *Update) One() error {
 	if u.objMaps == nil {
 		return errors.New("filter params cannot be nil")
@@ -434,7 +434,7 @@ func (u *Update) One() error {
 	return nil
 }
 
-// LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
+// LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
 func (n *Memgodb) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
@@ -482,9 +482,9 @@ func (n *Memgodb) LoadDefault() error {
 	return nil
 }
 
-// Persist is used to write data to file. All datas will be saved into a json file on the server.
+// Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
-// This method will make sure all your your data's are saved into a json file. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
+// This method will make sure all your your data's are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
 func (n *Memgodb) Persist() error {
 	if MemgodbStorage == nil {
 		return nil

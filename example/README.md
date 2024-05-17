@@ -18,7 +18,7 @@ fs.Debug()
 # Memdis storage
 Memdis gives you a Redis-like feature similarly as you would with a Redis database.
 ### Set()
-Set() adds a new data into the in-memmory storage
+Set() adds a new data into the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -29,7 +29,7 @@ if err := fs.Memdis().Set("key1", "user1", 5*time.Minute); err != nil {
 ```
 
 ### Get()
-Get() retrieves a data from the in-memmory storage
+Get() retrieves a data from the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -66,7 +66,7 @@ fmt.Println("setMany:", setMany)
 ```
 
 ### GetMany()
-GetMany() retrieves datas with matching keys from the in-memmory storage
+GetMany() retrieves data with matching keys from the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -97,7 +97,7 @@ if err := fs.Memdis().OverWriteWithKey("previousKey", "newKey", "newValue", 1*ti
 ```
 
 ### Del()
-Del() deletes a data from the in-memmory storage
+Del() deletes a data from the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -119,17 +119,17 @@ fmt.Println("typeOf:", typeOf)
 ```
 
 ### Clear()
-Clear() deletes all datas from the in-memmory storage
+Clear() deletes all data from the in-memory storage
 ```go
 fs := fscache.New()
 
 if err := fs.Memdis().Clear(); err != nil {
-	fmt.Println("error clearing all datas:", err)
+	fmt.Println("error clearing all data:", err)
 }
 ```
 
 ### Size()
-Size() retrieves the total data objects in the in-memmory storage
+Size() retrieves the total data objects in the in-memory storage
 ```go
 fs := fscache.New()
 
@@ -156,7 +156,7 @@ fmt.Println("values: ", values)
 ```
 
 ### KeyValuePairs()
-KeyValuePairs() returns an array of key value pairs of all the datas in the storage
+KeyValuePairs() returns an array of key value pairs of all the data in the storage
 ```go
 fs := fscache.New()
 
@@ -168,7 +168,7 @@ fmt.Println("keyValuePairs: ", keyValuePairs)
 Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database.
 
 ### Persist()
-// Persist is used to write data to file. All datas will be saved into a json file on the server.
+// Persist is used to write data to file. All data will be saved into a json file on the server.
 
 This method will make sure all your your data's are saved into a json file. A cronJon runs ever minute and writes your data(s) into a json file to ensure data integrity
 
@@ -356,7 +356,7 @@ if err := fs.Memgodb().Collection(User{}).Update(filter, update); err != nil {
 ```
 
 ### LoadDefault
-LoadDefault is used to load datas from the json file saved on the server using Persist() if any.
+LoadDefault is used to load data from the json file saved on the server using Persist() if any.
 ```go
 type User struct {}
 ```
