@@ -2,9 +2,9 @@ package fscache
 
 import (
 	"os"
+	"sync"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog"
 )
 
@@ -21,6 +21,7 @@ type (
 
 	// Memdis object instance
 	Memdis struct {
+		mu     *sync.RWMutex
 		logger zerolog.Logger
 		// storage for key value pair storage
 		storage []map[string]MemdisData
@@ -28,11 +29,13 @@ type (
 
 	// Memgodb object instance
 	Memgodb struct {
+		mu     *sync.RWMutex
 		logger zerolog.Logger
 	}
 
 	// Cache object
 	Cache struct {
+		logger          zerolog.Logger
 		MemdisInstance  Memdis
 		MemgodbInstance Memgodb
 	}
@@ -53,57 +56,26 @@ type (
 func New() Operations {
 	var memdicSorage []map[string]MemdisData
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-
+	mu := sync.RWMutex{}
 	md := Memdis{
+		mu:      &mu,
 		logger:  logger,
 		storage: memdicSorage,
 	}
 
 	Memgodb := Memgodb{
+		mu:     &mu,
 		logger: logger,
 	}
 
 	ch := Cache{
+		logger:          logger,
 		MemdisInstance:  md,
 		MemgodbInstance: Memgodb,
 	}
 
-	c := cron.New()
-
-	// cron job set to run every 1 minute
-	c.AddFunc("*/1 * * * *", func() {
-		if debug {
-			logger.Info().Msg("cron job running...")
-		}
-
-		if persistMemgodbData {
-			if err := ch.MemgodbInstance.Persist(); err != nil {
-				if debug {
-					logger.Info().Msgf("persist error: %v", err)
-				}
-			}
-		}
-
-		for i := 0; i < len(ch.MemdisInstance.storage); i++ {
-			for _, value := range ch.MemdisInstance.storage[i] {
-				currenctTime := time.Now()
-				if currenctTime.Before(value.Duration) {
-					if debug {
-						logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
-					}
-					// take the data from off the array object
-					ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
-					// decrement the array index by 1 since an object have been taken off the array
-					i--
-				}
-			}
-		}
-	})
-
-	c.Start()
-	if debug {
-		logger.Info().Msgf("cron job entries ::: %v", c.Entries())
-	}
+	// start go routine
+	go ch.runner()
 
 	op := Operations(&ch)
 	return op
@@ -123,5 +95,42 @@ func (c *Cache) Memdis() *Memdis {
 func (c *Cache) Memgodb() *Memgodb {
 	return &Memgodb{
 		logger: c.MemgodbInstance.logger,
+	}
+}
+
+// runner runs every 30 seconds to persists the Memgodb records and delete expired records from the Memdis storage.
+func (ch *Cache) runner() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if debug {
+			ch.logger.Info().Msg("cron job running...")
+		}
+
+		if persistMemgodbData {
+			if err := ch.MemgodbInstance.Persist(); err != nil {
+				if debug {
+					ch.logger.Info().Msgf("persist error: %v", err)
+				}
+			}
+		}
+
+		for i := 0; i < len(ch.MemdisInstance.storage); i++ {
+			for _, value := range ch.MemdisInstance.storage[i] {
+				currentTime := time.Now()
+				if currentTime.Before(value.Duration) {
+					ch.Memdis().mu.Lock()
+					if debug {
+						ch.logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
+					}
+					// take the data from off the array object
+					ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
+					// decrement the array index by 1 since an object have been taken off the array
+					i--
+					ch.Memdis().mu.Unlock()
+				}
+			}
+		}
 	}
 }
