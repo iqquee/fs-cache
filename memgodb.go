@@ -70,17 +70,17 @@ type (
 )
 
 // Collection defines the collection(table) name to perform an operation on it
-func (ns *Memgodb) Collection(col any) *Collection {
+func (mg *Memgodb) Collection(col any) *Collection {
 	t := reflect.TypeOf(col)
 
 	// run validation
 	if reflect.ValueOf(col).IsZero() && col == nil {
-		ns.logger.Error().Msg("Collection cannot be empty...")
+		mg.logger.Error().Msg("Collection cannot be empty...")
 		panic("Collection cannot be empty...")
 	}
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.String {
-		ns.logger.Error().Msg("Collection must either be a [string] or an [object]")
+		mg.logger.Error().Msg("Collection must either be a [string] or an [object]")
 		panic("Collection must either be a [string] or an [object]")
 	}
 
@@ -96,7 +96,7 @@ func (ns *Memgodb) Collection(col any) *Collection {
 	}
 
 	return &Collection{
-		logger:         ns.logger,
+		logger:         mg.logger,
 		collectionName: colName,
 	}
 }
@@ -438,7 +438,7 @@ func (u *Update) One() error {
 }
 
 // LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
-func (*Memgodb) LoadDefault() error {
+func (mg *Memgodb) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
@@ -488,7 +488,7 @@ func (*Memgodb) LoadDefault() error {
 // Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
 // This method will make sure all your data are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
-func (*Memgodb) Persist() error {
+func (mg *Memgodb) Persist() error {
 	if MemgodbStorage == nil {
 		return nil
 	}

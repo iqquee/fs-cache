@@ -30,21 +30,26 @@ var MemgodbTestCases = []any{
 }
 
 func Test_Collection(t *testing.T) {
-	ch := Cache{}
+	fs := New()
 
-	col := ch.Memgodb().Collection("user")
+	col := fs.Memgodb().Collection("user")
 	assert.NotNil(t, col)
 	assert.Equal(t, "users", col.collectionName)
 }
 
 func Test_Insert_One(t *testing.T) {
-	ch := Cache{}
+	fs := New()
+	// ch := Cache{
+	// 	MemgodbInstance: Memgodb{
+	// 		mu: &sync.RWMutex{},
+	// 	},
+	// }
 
 	var counter int
 	name := fmt.Sprintf("testCase_%v", counter+1)
 	for _, v := range MemgodbTestCases {
 		t.Run(name, func(t *testing.T) {
-			res, err := ch.Memgodb().Collection("user").Insert(v).One()
+			res, err := fs.Memgodb().Collection("user").Insert(v).One()
 			require.NoError(t, err)
 			assert.NotNil(t, v, res)
 		})

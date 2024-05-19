@@ -25,7 +25,6 @@ type (
 
 	// Memgodb object instance
 	Memgodb struct {
-		mu     *sync.RWMutex
 		logger zerolog.Logger
 	}
 
@@ -50,17 +49,17 @@ type (
 
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
-	var memdicSorage []map[string]MemdisData
+	var memdisSorage []map[string]MemdisData
 	logger := zerolog.New(io.Discard)
-	mu := sync.RWMutex{}
+	mu := &sync.RWMutex{}
+
 	md := Memdis{
-		mu:      &mu,
+		mu:      mu,
 		logger:  logger,
-		storage: memdicSorage,
+		storage: memdisSorage,
 	}
 
 	Memgodb := Memgodb{
-		mu:     &mu,
 		logger: logger,
 	}
 
