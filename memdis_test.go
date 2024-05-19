@@ -1,6 +1,8 @@
 package fscache
 
 import (
+	"bytes"
+	"io"
 	"testing"
 	"time"
 
@@ -105,8 +107,19 @@ func TestDebug(t *testing.T) {
 		MemdisInstance: md,
 	}
 
-	ch.Debug()
-	assert.True(t, debug)
+	buf := bytes.NewBuffer(nil)
+
+	ch.Memdis().logger.Info().Msg("hello world - testing") // before enabling debug logging
+	data, err := io.ReadAll(buf)
+	assert.NoError(t, err)
+	assert.Equal(t, string(data), "")
+
+	ch.Debug(buf)
+	ch.Memdis().logger.Info().Msg("hello world - testing") // after enabling debug logging
+
+	data, err = io.ReadAll(buf)
+	assert.NoError(t, err)
+	assert.Contains(t, string(data), "hello world - testing")
 }
 
 func TestOverWrite(t *testing.T) {

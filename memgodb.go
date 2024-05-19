@@ -75,16 +75,12 @@ func (ns *Memgodb) Collection(col any) *Collection {
 
 	// run validation
 	if reflect.ValueOf(col).IsZero() && col == nil {
-		if debug {
-			ns.logger.Error().Msg("Collection cannot be empty...")
-		}
+		ns.logger.Error().Msg("Collection cannot be empty...")
 		panic("Collection cannot be empty...")
 	}
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.String {
-		if debug {
-			ns.logger.Error().Msg("Collection must either be a [string] or an [object]")
-		}
+		ns.logger.Error().Msg("Collection must either be a [string] or an [object]")
 		panic("Collection must either be a [string] or an [object]")
 	}
 
