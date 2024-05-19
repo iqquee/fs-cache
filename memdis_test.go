@@ -1,6 +1,7 @@
 package fscache
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -32,13 +33,14 @@ var memdisTestCases = []map[string]MemdisData{
 
 func TestSet(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
 		MemdisInstance: md,
 	}
 
-	err := ch.Memdis().Set("missing_key", "value1", time.Minute)
+	err := ch.Memdis().Set("missing-key", "value1", time.Minute)
 	require.NoError(t, err)
 
 	err = ch.Memdis().Set("key1", "value1", time.Minute)
@@ -47,6 +49,7 @@ func TestSet(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -63,6 +66,7 @@ func TestGet(t *testing.T) {
 
 func TestDel(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -75,6 +79,7 @@ func TestDel(t *testing.T) {
 
 func TestClear(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -87,6 +92,7 @@ func TestClear(t *testing.T) {
 
 func TestSize(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -99,6 +105,7 @@ func TestSize(t *testing.T) {
 
 func TestDebug(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -111,6 +118,7 @@ func TestDebug(t *testing.T) {
 
 func TestOverWrite(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -126,6 +134,7 @@ func TestOverWrite(t *testing.T) {
 
 func TestOverWriteWithKey(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -141,6 +150,7 @@ func TestOverWriteWithKey(t *testing.T) {
 
 func TestTypeOf(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -157,6 +167,7 @@ func TestTypeOf(t *testing.T) {
 
 func TestKeyValuePairs(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -169,6 +180,7 @@ func TestKeyValuePairs(t *testing.T) {
 
 func TestSetMany(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -194,6 +206,7 @@ func TestSetMany(t *testing.T) {
 
 func TestGetMany(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -208,6 +221,7 @@ func TestGetMany(t *testing.T) {
 
 func TestKeys(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
@@ -220,6 +234,7 @@ func TestKeys(t *testing.T) {
 
 func TestValues(t *testing.T) {
 	md := Memdis{
+		mu:      &sync.RWMutex{},
 		storage: memdisTestCases,
 	}
 	ch := Cache{
