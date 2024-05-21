@@ -181,10 +181,7 @@ if err := fs.Memgodb().Persist(); err != nil {
 ```
 
 ### Insert()
-Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
-
-- ### One
-One adds a new record into the storage with collection name
+Insert is used to insert a new record into the storage.
 ```go
 type User struct {
 	Name string `json:"name"`
@@ -194,22 +191,16 @@ type User struct {
 ```go
 fs := fscache.New()
 
+// to insert single record
 var user User
-user.Name = "jane doe" 
+user.Name = "jane doe"
 user.Age = 20
 
-res, err := fs.Memgodb().Collection(User{}).Insert(user).One()
-if err != nil {
+if err := fs.Memgodb().Collection(User{}).Insert(user); err != nil {
 	fmt.Println(err)
 }
 
-fmt.Println(res)
-```
-- ### Many()
-Many adds many records into the storage at once
-```go
-fs := fscache.New()
-
+// to insert multiple records
 var users = []struct {
 		Name string `json:"name"`
 		Age  int    `json:"age"`
@@ -220,16 +211,16 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.Memgodb().Collection("user").Insert(nil).Many(users); err != nil {
+if err := fs.Memgodb().Collection("user").Insert(users); err != nil {
 	fmt.Println(err)
 }
 ```
-- ### FromJsonFile()
-FromJsonFile is a method available in Insert(). It adds record(s) into the storage from a json file
+### InsertFromJsonFile()
+InsertFromJsonFile adds records into the storage from a JSON file.
 ```go
 fs := fscache.New()
 
-if err := fs.Memgodb().Collection("user").Insert(nil).FromJsonFile("path to JSON file"); err != nil {
+if err := fs.Memgodb().Collection("user").InsertFromJsonFile("path to JSON file"); err != nil {
 	fmt.Println(err)
 }
 ```

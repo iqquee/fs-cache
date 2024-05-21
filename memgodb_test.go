@@ -39,35 +39,26 @@ func Test_Collection(t *testing.T) {
 
 func Test_Insert_One(t *testing.T) {
 	fs := New()
-	// ch := Cache{
-	// 	MemgodbInstance: Memgodb{
-	// 		mu: &sync.RWMutex{},
-	// 	},
-	// }
 
+	// insert single records
 	var counter int
 	name := fmt.Sprintf("testCase_%v", counter+1)
 	for _, v := range MemgodbTestCases {
 		t.Run(name, func(t *testing.T) {
-			res, err := fs.Memgodb().Collection("user").Insert(v).One()
+			err := fs.Memgodb().Collection("user").Insert(v)
 			require.NoError(t, err)
-			assert.NotNil(t, v, res)
 		})
 
 		counter++
 	}
-}
 
-func Test_Insert_Many(t *testing.T) {
-	ch := Cache{}
-
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	// to insert many records at once
+	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 }
 
-func Test_Insert_FromJsonFile(t *testing.T) {
-	ch := Cache{}
+func Test_InsertFromJsonFile(t *testing.T) {
+	fs := New()
 
 	testCases := map[string]struct {
 		fileName      string
@@ -83,7 +74,7 @@ func Test_Insert_FromJsonFile(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("user").Insert(nil).FromJsonFile(testCase.fileName)
+			err := fs.Memgodb().Collection("user").InsertFromJsonFile(testCase.fileName)
 			assert.Equal(t, testCase.expectedError, err)
 		})
 	}
@@ -104,7 +95,7 @@ func Test_Insert_FromJsonFile(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("user").Insert(nil).FromJsonFile(testCase.fileName)
+			err := fs.Memgodb().Collection("user").InsertFromJsonFile(testCase.fileName)
 			require.Error(t, err)
 			require.ErrorContains(t, err, testCase.expectedError.Error())
 		})
@@ -112,12 +103,11 @@ func Test_Insert_FromJsonFile(t *testing.T) {
 }
 
 func Test__Filter_First(t *testing.T) {
-	ch := Cache{}
+	fs := New()
 
 	// insert a new records
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 
 	testCases := map[string]struct {
 		expectedError error
@@ -130,7 +120,7 @@ func Test__Filter_First(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			result, err := ch.Memgodb().Collection("users").Filter(testCase.filter).First()
+			result, err := fs.Memgodb().Collection("users").Filter(testCase.filter).First()
 			require.NoError(t, err)
 			assert.NotNil(t, result)
 		})
@@ -152,7 +142,7 @@ func Test__Filter_First(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			result, err := ch.Memgodb().Collection("users").Filter(testCase.filter).First()
+			result, err := fs.Memgodb().Collection("users").Filter(testCase.filter).First()
 			require.ErrorIs(t, err, testCase.expectedError)
 			assert.Nil(t, result)
 		})
@@ -160,12 +150,11 @@ func Test__Filter_First(t *testing.T) {
 }
 
 func Test_Filter_All(t *testing.T) {
-	ch := Cache{}
+	fs := New()
 
 	// insert a new records
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 
 	testCases := map[string]struct {
 		expectedError error
@@ -179,7 +168,7 @@ func Test_Filter_All(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			results, err := ch.Memgodb().Collection("users").Filter(testCase.filter).All()
+			results, err := fs.Memgodb().Collection("users").Filter(testCase.filter).All()
 			require.NoError(t, err)
 			assert.NotNil(t, results)
 		})
@@ -197,19 +186,18 @@ func Test_Filter_All(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			_, err := ch.Memgodb().Collection("users").Filter(testCase.filter).All()
+			_, err := fs.Memgodb().Collection("users").Filter(testCase.filter).All()
 			require.ErrorIs(t, err, testCase.expectedError)
 		})
 	}
 }
 
 func Test_Delete_One(t *testing.T) {
-	ch := Cache{}
+	fs := New()
 
 	// insert a new record
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 
 	filters := map[string]map[string]any{
 		"not nil params": {"age": 35.0}, // filter out record of age 35
@@ -217,7 +205,7 @@ func Test_Delete_One(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("users").Delete(v).One()
+			err := fs.Memgodb().Collection("users").Delete(v).One()
 			require.NoError(t, err)
 		})
 	}
@@ -228,7 +216,7 @@ func Test_Delete_One(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("users").Delete(v).One()
+			err := fs.Memgodb().Collection("users").Delete(v).One()
 			require.Error(t, err)
 		})
 	}
@@ -238,9 +226,8 @@ func Test_Delete_All(t *testing.T) {
 	ch := Cache{}
 
 	// insert a new record
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	err := ch.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 
 	filters := map[string]map[string]any{
 		"not nil params": {"age": 35.0}, // filter out record of age 35
@@ -266,12 +253,11 @@ func Test_Delete_All(t *testing.T) {
 }
 
 func Test_Update_One(t *testing.T) {
-	ch := Cache{}
+	fs := New()
 
 	// insert a new record
-	res, err := ch.Memgodb().Collection("user").Insert(nil).Many(MemgodbTestCases)
+	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
-	assert.NotNil(t, res)
 
 	testCases := map[string]struct {
 		expectedError error
@@ -307,7 +293,7 @@ func Test_Update_One(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("user").Update(testCase.filter, testCase.update).One()
+			err := fs.Memgodb().Collection("user").Update(testCase.filter, testCase.update).One()
 			require.ErrorIs(t, err, testCase.expectedError)
 		})
 	}
