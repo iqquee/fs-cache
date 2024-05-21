@@ -35,12 +35,6 @@ type (
 		collectionName string
 	}
 
-	// Insert object implements One() and Many() to insert new records
-	Insert struct {
-		obj        any
-		collection Collection
-	}
-
 	// Filter object implements One() and All()
 	Filter struct {
 		objMaps    []map[string]any
@@ -101,76 +95,52 @@ func (mg *Memgodb) Collection(col any) *Collection {
 	}
 }
 
-// Insert is used to insert a new record into the storage. It has two methods which are One() and Many().
-func (c *Collection) Insert(obj any) *Insert {
-	return &Insert{
-		obj:        obj,
-		collection: *c,
+// Insert is used to insert a new record into the storage.
+func (c *Collection) Insert(obj any) error {
+	t := reflect.TypeOf(obj)
+
+	if t.Kind() == reflect.Struct || t.Kind() == reflect.Map {
+		if err := c.insertOne(obj); err != nil {
+			return err
+		}
+
+		return nil
+	} else if t.Kind() == reflect.Slice {
+		arrObjs, err := c.decodeMany(obj)
+		if err != nil {
+			return err
+		}
+
+		for _, obj := range arrObjs {
+			if err := c.insertOne(obj); err != nil {
+				return err
+			}
+		}
+	} else {
+		return errors.New("insert() param must either be a [map], [struct] or s [slice]")
 	}
+
+	return nil
 }
 
-// One is a method available in Insert(). It adds a new record into the storage with collection name
-func (i *Insert) One() (any, error) {
-	if i.obj == nil {
-		return nil, errors.New("One() params cannot be nil")
-	}
-
-	t := reflect.TypeOf(i.obj)
-
-	if t.Kind() != reflect.Struct && t.Kind() != reflect.Map {
-		return nil, errors.New("insert() param must either be a [map] or a [struct]")
-	}
-
-	objMap, err := i.collection.decode(i.obj)
+// insertOne is sued to insert a new record into the storage with collection name
+func (c *Collection) insertOne(obj any) error {
+	objMap, err := c.decode(obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	objMap["colName"] = i.collection.collectionName
+	objMap["colName"] = c.collectionName
 	objMap["id"] = uuid.New()
 	objMap["createdAt"] = time.Now()
 	objMap["updatedAt"] = nil
-
 	MemgodbStorage = append(MemgodbStorage, objMap)
-	return objMap, nil
+
+	return nil
 }
 
-// Many is a method available in Insert(). It adds many records into the storage at once
-func (i *Insert) Many(arr any) ([]any, error) {
-	if i.obj != nil {
-		return nil, errors.New("Many() params must be nil to insert Many")
-	}
-
-	t := reflect.TypeOf(arr)
-
-	if t.Kind() != reflect.Slice {
-		return nil, errors.New("function param must be a [slice]")
-	}
-
-	arrObjs, err := i.collection.decodeMany(arr)
-	if err != nil {
-		return nil, err
-	}
-
-	var savedData []any
-	for _, obj := range arrObjs {
-		saved, err := i.collection.Insert(obj).One()
-		if err != nil {
-			return nil, err
-		}
-
-		savedData = append(savedData, saved)
-	}
-
-	return savedData, nil
-}
-
-// FromJsonFile is a method available in Insert(). It adds records into the storage from a JSON file
-func (i *Insert) FromJsonFile(fileLocation string) error {
-	if i.obj != nil {
-		return errors.New("FromFile() params must be nil to insert from file")
-	}
-
+// InsertFromJsonFile adds records into the storage from a JSON file.
+func (c *Collection) InsertFromJsonFile(fileLocation string) error {
 	f, err := os.Open(fileLocation)
 	if err != nil {
 		return err
@@ -188,24 +158,8 @@ func (i *Insert) FromJsonFile(fileLocation string) error {
 	}
 
 	t := reflect.TypeOf(obj)
-	if t.Kind() == reflect.Slice {
-		objMap, err := i.collection.decodeMany(obj)
-		if err != nil {
-			return nil
-		}
-
-		_, err = i.collection.Insert(nil).Many(objMap)
-		if err != nil {
-			return nil
-		}
-	} else if t.Kind() == reflect.Map {
-		objMap, err := i.collection.decode(obj)
-		if err != nil {
-			return nil
-		}
-
-		_, err = i.collection.Insert(objMap).One()
-		if err != nil {
+	if t.Kind() == reflect.Slice || t.Kind() == reflect.Map {
+		if err = c.Insert(obj); err != nil {
 			return nil
 		}
 	} else {
