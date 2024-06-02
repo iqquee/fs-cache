@@ -56,9 +56,6 @@ func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]any, error
 
 // Get() retrieves a data from the in-memory storage
 func (md *Memdis) Get(key string) (any, error) {
-	md.mu.Lock()
-	defer md.mu.Unlock()
-
 	for _, cache := range md.storage {
 		if val, ok := cache[key]; ok {
 			return val.Value, nil
