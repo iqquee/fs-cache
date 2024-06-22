@@ -20,7 +20,6 @@
 # Go workspace file
 go.work
 
-example/main.go
-example/noSqlStorage.json
+example/
 memgodbstorage.json
 benchmark_test.go

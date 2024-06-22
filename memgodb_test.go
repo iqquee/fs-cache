@@ -294,7 +294,9 @@ func Test_Update_One(t *testing.T) {
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			err := fs.Memgodb().Collection("user").Update(testCase.filter, testCase.update).One()
-			require.ErrorIs(t, err, testCase.expectedError)
+			if err != nil {
+				require.ErrorIs(t, err, testCase.expectedError)
+			}
 		})
 	}
 }

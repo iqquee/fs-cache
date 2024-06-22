@@ -364,20 +364,15 @@ func (u *Update) One() error {
 	}
 
 	notFound := true
-	counter := 0
 	for index, item := range u.objMaps {
-		for key, val := range u.filter {
+		for key := range u.filter {
 			if item["colName"] == u.collection.collectionName {
-				if v, ok := item[key]; ok && val == v {
+				if _, ok := item[key]; ok {
 					notFound = false
-					if counter < 1 {
-						for _, updateValue := range u.update {
-							item[key] = updateValue
-							counter++
-							break
-						}
-						item["updatedAt"] = time.Now()
+					for updateKey, updateValue := range u.update {
+						item[updateKey] = updateValue
 					}
+					item["updatedAt"] = time.Now()
 					MemgodbStorage[index] = item
 				}
 			}
