@@ -32,7 +32,7 @@ var MemgodbTestCases = []any{
 func Test_Collection(t *testing.T) {
 	fs := New()
 
-	col := fs.Memgodb().Collection("user")
+	col := fs.DataStore().Collection("user")
 	assert.NotNil(t, col)
 	assert.Equal(t, "users", col.collectionName)
 }
@@ -45,7 +45,7 @@ func Test_Insert_One(t *testing.T) {
 	name := fmt.Sprintf("testCase_%v", counter+1)
 	for _, v := range MemgodbTestCases {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("user").Insert(v)
+			err := fs.DataStore().Collection("user").Insert(v)
 			require.NoError(t, err)
 		})
 
@@ -53,7 +53,7 @@ func Test_Insert_One(t *testing.T) {
 	}
 
 	// to insert many records at once
-	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := fs.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 }
 
@@ -74,7 +74,7 @@ func Test_InsertFromJsonFile(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("user").InsertFromJsonFile(testCase.fileName)
+			err := fs.DataStore().Collection("user").InsertFromJsonFile(testCase.fileName)
 			assert.Equal(t, testCase.expectedError, err)
 		})
 	}
@@ -95,7 +95,7 @@ func Test_InsertFromJsonFile(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("user").InsertFromJsonFile(testCase.fileName)
+			err := fs.DataStore().Collection("user").InsertFromJsonFile(testCase.fileName)
 			require.Error(t, err)
 			require.ErrorContains(t, err, testCase.expectedError.Error())
 		})
@@ -106,7 +106,7 @@ func Test__Filter_First(t *testing.T) {
 	fs := New()
 
 	// insert a new records
-	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := fs.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -120,7 +120,7 @@ func Test__Filter_First(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			result, err := fs.Memgodb().Collection("users").Filter(testCase.filter).First()
+			result, err := fs.DataStore().Collection("users").Filter(testCase.filter).First()
 			require.NoError(t, err)
 			assert.NotNil(t, result)
 		})
@@ -142,7 +142,7 @@ func Test__Filter_First(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			result, err := fs.Memgodb().Collection("users").Filter(testCase.filter).First()
+			result, err := fs.DataStore().Collection("users").Filter(testCase.filter).First()
 			require.ErrorIs(t, err, testCase.expectedError)
 			assert.Nil(t, result)
 		})
@@ -153,7 +153,7 @@ func Test_Filter_All(t *testing.T) {
 	fs := New()
 
 	// insert a new records
-	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := fs.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -168,7 +168,7 @@ func Test_Filter_All(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			results, err := fs.Memgodb().Collection("users").Filter(testCase.filter).All()
+			results, err := fs.DataStore().Collection("users").Filter(testCase.filter).All()
 			require.NoError(t, err)
 			assert.NotNil(t, results)
 		})
@@ -186,7 +186,7 @@ func Test_Filter_All(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			_, err := fs.Memgodb().Collection("users").Filter(testCase.filter).All()
+			_, err := fs.DataStore().Collection("users").Filter(testCase.filter).All()
 			require.ErrorIs(t, err, testCase.expectedError)
 		})
 	}
@@ -196,7 +196,7 @@ func Test_Delete_One(t *testing.T) {
 	fs := New()
 
 	// insert a new record
-	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := fs.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 
 	filters := map[string]map[string]any{
@@ -205,7 +205,7 @@ func Test_Delete_One(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("users").Delete(v).One()
+			err := fs.DataStore().Collection("users").Delete(v).One()
 			require.NoError(t, err)
 		})
 	}
@@ -216,17 +216,17 @@ func Test_Delete_One(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("users").Delete(v).One()
+			err := fs.DataStore().Collection("users").Delete(v).One()
 			require.Error(t, err)
 		})
 	}
 }
 
 func Test_Delete_All(t *testing.T) {
-	ch := Cache{}
+	ch := New()
 
 	// insert a new record
-	err := ch.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := ch.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 
 	filters := map[string]map[string]any{
@@ -235,7 +235,8 @@ func Test_Delete_All(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("users").Delete(v).All()
+			err := ch.DataStore().Collection("users").Delete(v).All()
+			fmt.Println("Delete all Error: ", err)
 			require.NoError(t, err)
 		})
 	}
@@ -246,7 +247,8 @@ func Test_Delete_All(t *testing.T) {
 
 	for name, v := range filters {
 		t.Run(name, func(t *testing.T) {
-			err := ch.Memgodb().Collection("users").Delete(v).All()
+			err := ch.DataStore().Collection("users").Delete(v).All()
+			fmt.Println("Delete all Error: ", err)
 			require.NoError(t, err)
 		})
 	}
@@ -256,7 +258,7 @@ func Test_Update_One(t *testing.T) {
 	fs := New()
 
 	// insert a new record
-	err := fs.Memgodb().Collection("user").Insert(MemgodbTestCases)
+	err := fs.DataStore().Collection("user").Insert(MemgodbTestCases)
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -293,7 +295,7 @@ func Test_Update_One(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			err := fs.Memgodb().Collection("user").Update(testCase.filter, testCase.update).One()
+			err := fs.DataStore().Collection("user").Update(testCase.filter, testCase.update).One()
 			if err != nil {
 				require.ErrorIs(t, err, testCase.expectedError)
 			}
@@ -302,15 +304,15 @@ func Test_Update_One(t *testing.T) {
 }
 
 func Test_Persist(t *testing.T) {
-	ch := Cache{}
+	ch := New()
 
-	err := ch.Memgodb().Persist()
+	err := ch.DataStore().Persist()
 	require.NoError(t, err)
 }
 
 func Test_LoadDefault(t *testing.T) {
-	ch := Cache{}
+	ch := New()
 
-	err := ch.Memgodb().LoadDefault()
+	err := ch.DataStore().LoadDefault()
 	require.NoError(t, err)
 }

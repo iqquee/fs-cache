@@ -11,22 +11,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// memdis test cases
-var memdisTestCases = []map[string]MemdisData{
+// keyStoreTestCases is a slice of maps used for testing the keyStore functionality.
+// Each map contains a string key and a KeyStoreData value. KeyStoreData holds a Value
+// of various types (string, int, bool) and a Duration which is a time.Time object.
+var keyStoreTestCases = []map[string]KeyStoreData{
 	{
-		"key1": MemdisData{
+		"key1": KeyStoreData{
 			Value:    "value1",
 			Duration: time.Now().Add(time.Minute),
 		},
 	},
 	{
-		"key2": MemdisData{
+		"key2": KeyStoreData{
 			Value:    10,
 			Duration: time.Time{},
 		},
 	},
 	{
-		"key3": MemdisData{
+		"key3": KeyStoreData{
 			Value:    true,
 			Duration: time.Time{},
 		},
@@ -34,95 +36,95 @@ var memdisTestCases = []map[string]MemdisData{
 }
 
 func TestSet(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	err := ch.Memdis().Set("missing-key", "value1", time.Minute)
+	err := ch.KeyStore().Set("missing-key", "value1", time.Minute)
 	require.NoError(t, err)
 
-	err = ch.Memdis().Set("key1", "value1", time.Minute)
+	err = ch.KeyStore().Set("key1", "value1", time.Minute)
 	require.Error(t, err) // this one exists, it raises an error
 }
 
 func TestGet(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	value, err := ch.Memdis().Get("key1")
+	value, err := ch.KeyStore().Get("key1")
 	require.NoError(t, err)
 	assert.Equal(t, "value1", value)
 
-	_, err = ch.Memdis().Get("missing_key")
+	_, err = ch.KeyStore().Get("missing_key")
 	require.ErrorIs(t, err, ErrKeyNotFound)
 }
 
 func TestDel(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	err := ch.Memdis().Del("key1")
+	err := ch.KeyStore().Del("key1")
 	require.NoError(t, err)
 }
 
 func TestClear(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	err := ch.Memdis().Clear()
+	err := ch.KeyStore().Clear()
 	require.NoError(t, err)
 }
 
 func TestSize(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	value := ch.Memdis().Size()
+	value := ch.KeyStore().Size()
 	assert.EqualValues(t, 3, value)
 }
 
 func TestDebug(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
 	buf := bytes.NewBuffer(nil)
 
-	ch.Memdis().logger.Info().Msg("hello world - testing") // before enabling debug logging
+	ch.KeyStore().logger.Info().Msg("hello world - testing") // before enabling debug logging
 	data, err := io.ReadAll(buf)
 	assert.NoError(t, err)
 	assert.Equal(t, string(data), "")
 
 	ch.Debug(buf)
-	ch.Memdis().logger.Info().Msg("hello world - testing") // after enabling debug logging
+	ch.KeyStore().logger.Info().Msg("hello world - testing") // after enabling debug logging
 
 	data, err = io.ReadAll(buf)
 	assert.NoError(t, err)
@@ -130,15 +132,15 @@ func TestDebug(t *testing.T) {
 }
 
 func TestOverWrite(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	if err := ch.Memdis().OverWrite("key1", "overwrite1", time.Minute); err != nil {
+	if err := ch.KeyStore().OverWrite("key1", "overwrite1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -146,15 +148,15 @@ func TestOverWrite(t *testing.T) {
 }
 
 func TestOverWriteWithKey(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	if err := ch.Memdis().OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
+	if err := ch.KeyStore().OverWriteWithKey("key1", "newKey1", "value1", time.Minute); err != nil {
 		assert.Error(t, err)
 	}
 
@@ -162,15 +164,15 @@ func TestOverWriteWithKey(t *testing.T) {
 }
 
 func TestTypeOf(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	typeOf, err := ch.Memdis().TypeOf("key1")
+	typeOf, err := ch.KeyStore().TypeOf("key1")
 	if err != nil {
 		assert.Error(t, err)
 	}
@@ -179,81 +181,81 @@ func TestTypeOf(t *testing.T) {
 }
 
 func TestKeyValuePairs(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	data := ch.Memdis().KeyValuePairs()
+	data := ch.KeyStore().KeyValuePairs()
 	assert.NotNil(t, data)
 }
 
 func TestSetMany(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	testCase := []map[string]MemdisData{
+	testCase := []map[string]KeyStoreData{
 		{
-			"key4": MemdisData{
+			"key4": KeyStoreData{
 				Value:    "value4",
 				Duration: time.Now().Add(time.Minute),
 			},
-			"key5": MemdisData{
+			"key5": KeyStoreData{
 				Value: false,
 			},
 		},
 	}
 
-	data, err := ch.Memdis().SetMany(testCase)
+	data, err := ch.KeyStore().SetMany(testCase)
 	require.NoError(t, err)
 	assert.NotNil(t, data)
 }
 
 func TestGetMany(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
 	keys := []string{"key1", "key2"}
 
-	result := ch.Memdis().GetMany(keys)
+	result := ch.KeyStore().GetMany(keys)
 	assert.NotNil(t, result)
 }
 
 func TestKeys(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	keys := ch.Memdis().Keys()
+	keys := ch.KeyStore().Keys()
 	assert.NotNil(t, keys)
 }
 
 func TestValues(t *testing.T) {
-	md := Memdis{
+	md := KeyStore{
 		mu:      &sync.RWMutex{},
-		storage: memdisTestCases,
+		storage: keyStoreTestCases,
 	}
 	ch := Cache{
-		MemdisInstance: md,
+		KeyStoreInstance: md,
 	}
 
-	values := ch.Memdis().Values()
+	values := ch.KeyStore().Values()
 	assert.NotNil(t, values)
 }

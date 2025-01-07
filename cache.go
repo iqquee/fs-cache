@@ -9,30 +9,37 @@ import (
 )
 
 type (
-	// MemdisData object
-	MemdisData struct {
+	// KeyStoreData object
+	KeyStoreData struct {
 		Value    any
 		Duration time.Time
 	}
 
-	// Memdis object instance
-	Memdis struct {
+	// KeyStore object instance
+	KeyStore struct {
 		mu     *sync.RWMutex
 		logger zerolog.Logger
 		// storage for key value pair storage
-		storage []map[string]MemdisData
+		storage []map[string]KeyStoreData
 	}
 
-	// Memgodb object instance
-	Memgodb struct {
-		logger zerolog.Logger
+	// DataStore represents the in-memory store for documents (key-value pairs)
+	DataStore struct {
+		logger  zerolog.Logger
+		data    map[string][]map[string]interface{}         // Map to store a slice of documents per namespace
+		indexes map[string]map[string]map[interface{}][]int // Indexes for fast querying
+		schemas map[string]Schema                           // Schema for validation
+		mu      *sync.RWMutex                               // Mutex for thread safety
 	}
+
+	// Schema represents the structure of a document with type validation
+	Schema map[string]string
 
 	// Cache object
 	Cache struct {
-		logger          zerolog.Logger
-		MemdisInstance  Memdis
-		MemgodbInstance Memgodb
+		logger            zerolog.Logger
+		KeyStoreInstance  KeyStore
+		DataStoreInstance DataStore
 	}
 
 	// Operations lists all available operations on the fs-cache
@@ -40,33 +47,36 @@ type (
 		// Debug() enables debug to get certain logs
 		Debug(io.Writer)
 
-		// Memdis gives you a Redis-like feature similarly as you would with a Redis database
-		Memdis() *Memdis
-		// Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database
-		Memgodb() *Memgodb
+		// KeyStore gives you a Redis-like feature similarly as you would with a Redis database
+		KeyStore() *KeyStore
+		// DataStore gives you a MongoDB-like feature similarly as you would with a MondoDB database
+		DataStore() *DataStore
 	}
 )
 
 // New initializes an instance of the in-memory storage cache
 func New() Operations {
-	var memdisSorage []map[string]MemdisData
 	logger := zerolog.New(io.Discard)
 	mu := &sync.RWMutex{}
 
-	md := Memdis{
+	ks := KeyStore{
 		mu:      mu,
 		logger:  logger,
-		storage: memdisSorage,
+		storage: make([]map[string]KeyStoreData, 0),
 	}
 
-	Memgodb := Memgodb{
-		logger: logger,
+	ds := DataStore{
+		logger:  logger,
+		mu:      mu,
+		data:    make(map[string][]map[string]interface{}),
+		indexes: make(map[string]map[string]map[interface{}][]int),
+		schemas: make(map[string]Schema),
 	}
 
 	ch := Cache{
-		logger:          logger,
-		MemdisInstance:  md,
-		MemgodbInstance: Memgodb,
+		logger:            logger,
+		KeyStoreInstance:  ks,
+		DataStoreInstance: ds,
 	}
 
 	// start go routine
@@ -80,23 +90,28 @@ func New() Operations {
 func (c *Cache) Debug(w io.Writer) {
 	logger := zerolog.New(w).With().Timestamp().Logger()
 	c.logger = logger
-	c.MemdisInstance.logger = logger
-	c.MemgodbInstance.logger = logger
+	c.KeyStoreInstance.logger = logger
+	c.DataStoreInstance.logger = logger
 }
 
-// KeyValue returns methods for key-value pair storage
-func (c *Cache) Memdis() *Memdis {
-	return &c.MemdisInstance
+// KeyStore returns methods for key-value pair storage
+func (c *Cache) KeyStore() *KeyStore {
+	return &c.KeyStoreInstance
 }
 
-// Memgodb returns methods for Memgodb-like storage
-func (c *Cache) Memgodb() *Memgodb {
-	return &Memgodb{
-		logger: c.MemgodbInstance.logger,
-	}
+// DataStore returns methods for a NoSQL or SQL-[like] storage
+func (c *Cache) DataStore() *DataStore {
+	return &c.DataStoreInstance
 }
 
-// runner runs every 30 seconds to persists the Memgodb records and delete expired records from the Memdis storage.
+// runner is a method of the Cache struct that periodically performs maintenance tasks.
+// It runs a cron job every 30 seconds to:
+// 1. Log the execution of the cron job.
+// 2. Persist data if the persistDataStoreData flag is set.
+// 3. Lock the KeyStore, check for expired data objects, and remove them from the storage.
+//
+// The method uses a ticker to trigger the cron job at regular intervals and ensures
+// that the ticker is stopped when the method exits.
 func (ch *Cache) runner() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
@@ -104,25 +119,32 @@ func (ch *Cache) runner() {
 	for range ticker.C {
 		ch.logger.Info().Msg("cron job running...")
 
-		if persistMemgodbData {
-			if err := ch.MemgodbInstance.Persist(); err != nil {
+		// Persist data if necessary
+		if persistDataStoreData {
+			if err := ch.DataStoreInstance.Persist(); err != nil {
 				ch.logger.Info().Msgf("persist error: %v", err)
 			}
 		}
 
-		for i := 0; i < len(ch.MemdisInstance.storage); i++ {
-			for _, value := range ch.MemdisInstance.storage[i] {
-				currentTime := time.Now()
+		ch.KeyStore().mu.Lock()
+		defer ch.KeyStore().mu.Unlock()
+
+		var toRemove []int
+
+		currentTime := time.Now()
+
+		for i := 0; i < len(ch.KeyStoreInstance.storage); i++ {
+			for _, value := range ch.KeyStoreInstance.storage[i] {
 				if currentTime.Before(value.Duration) {
-					ch.Memdis().mu.Lock()
-					ch.logger.Info().Msgf("data object [%v] got expired ", ch.MemdisInstance.storage[i])
-					// take the data from off the array object
-					ch.MemdisInstance.storage = append(ch.MemdisInstance.storage[:i], ch.MemdisInstance.storage[i+1:]...)
-					// decrement the array index by 1 since an object have been taken off the array
-					i--
-					ch.Memdis().mu.Unlock()
+					toRemove = append(toRemove, i)
+					ch.logger.Info().Msgf("data object [%v] got expired", ch.KeyStoreInstance.storage[i])
+					break
 				}
 			}
+		}
+
+		for _, index := range toRemove {
+			ch.KeyStoreInstance.storage = append(ch.KeyStoreInstance.storage[:index], ch.KeyStoreInstance.storage[index+1:]...)
 		}
 	}
 }
