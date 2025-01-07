@@ -14,49 +14,46 @@ var (
 )
 
 // Set() adds a new data into the in-memory storage
-func (md *Memdis) Set(key string, value any, duration ...time.Duration) error {
-	md.mu.Lock()
-	defer md.mu.Unlock()
+func (ks *KeyStore) Set(key string, value any, duration ...time.Duration) error {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 
-	for _, cache := range md.storage {
+	for _, cache := range ks.storage {
 		if _, ok := cache[key]; ok {
 			return ErrKeyExists
 		}
 	}
 
 	var ttl time.Duration
-	for i, v := range duration {
-		if i == 0 {
-			ttl = v
-			break
-		}
+	if len(duration) > 0 {
+		ttl = duration[0]
 	}
 
-	fs := make(map[string]MemdisData)
-	fs[key] = MemdisData{
+	fs := make(map[string]KeyStoreData)
+	fs[key] = KeyStoreData{
 		Value:    value,
 		Duration: time.Now().Add(ttl),
 	}
 
-	md.storage = append(md.storage, fs)
+	ks.storage = append(ks.storage, fs)
 
 	return nil
 }
 
 // SetMany() sets many data objects into memory for later access
-func (md *Memdis) SetMany(data []map[string]MemdisData) ([]map[string]any, error) {
-	md.mu.Lock()
-	defer md.mu.Unlock()
+func (ks *KeyStore) SetMany(data []map[string]KeyStoreData) ([]map[string]any, error) {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 
-	md.storage = append(md.storage, data...)
-	KeyValuePairs := md.KeyValuePairs()
+	ks.storage = append(ks.storage, data...)
+	KeyValuePairs := ks.KeyValuePairs()
 
 	return KeyValuePairs, nil
 }
 
 // Get() retrieves a data from the in-memory storage
-func (md *Memdis) Get(key string) (any, error) {
-	for _, cache := range md.storage {
+func (ks *KeyStore) Get(key string) (any, error) {
+	for _, cache := range ks.storage {
 		if val, ok := cache[key]; ok {
 			return val.Value, nil
 		}
@@ -66,9 +63,9 @@ func (md *Memdis) Get(key string) (any, error) {
 }
 
 // GetMany() retrieves data with matching keys from the in-memory storage
-func (md *Memdis) GetMany(keys []string) []map[string]any {
+func (ks *KeyStore) GetMany(keys []string) []map[string]any {
 	keyValuePairs := []map[string]any{}
-	for _, cache := range md.storage {
+	for _, cache := range ks.storage {
 		data := make(map[string]any)
 		for _, key := range keys {
 			if val, ok := cache[key]; ok {
@@ -82,13 +79,13 @@ func (md *Memdis) GetMany(keys []string) []map[string]any {
 }
 
 // Del() deletes a data from the in-memory storage
-func (md *Memdis) Del(key string) error {
-	md.mu.Lock()
-	defer md.mu.Unlock()
+func (ks *KeyStore) Del(key string) error {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 
-	for index, cache := range md.storage {
+	for index, cache := range ks.storage {
 		if _, ok := cache[key]; ok {
-			md.storage = append(md.storage[:index], md.storage[index+1:]...)
+			ks.storage = append(ks.storage[:index], ks.storage[index+1:]...)
 			return nil
 		}
 	}
@@ -97,26 +94,26 @@ func (md *Memdis) Del(key string) error {
 }
 
 // Clear() deletes all data from the in-memory storage
-func (md *Memdis) Clear() error {
-	md.storage = md.storage[:0]
+func (ks *KeyStore) Clear() error {
+	ks.storage = ks.storage[:0]
 	return nil
 }
 
 // Size() retrieves the total data objects in the in-memory storage
-func (md *Memdis) Size() int {
-	return len(md.storage)
+func (ks *KeyStore) Size() int {
+	return len(ks.storage)
 }
 
 // OverWrite() updates an already set value using it key
-func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) error {
-	md.mu.Lock()
-	defer md.mu.Unlock()
+func (ks *KeyStore) OverWrite(key string, value any, duration ...time.Duration) error {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 
 	var isFound bool
-	for index, cache := range md.storage {
+	for index, cache := range ks.storage {
 		if _, ok := cache[key]; ok {
 			isFound = true
-			md.storage = append(md.storage[:index], md.storage[index+1:]...)
+			ks.storage = append(ks.storage[:index], ks.storage[index+1:]...)
 		}
 	}
 
@@ -125,34 +122,31 @@ func (md *Memdis) OverWrite(key string, value any, duration ...time.Duration) er
 	}
 
 	var ttl time.Duration
-	for i, v := range duration {
-		if i == 0 {
-			ttl = v
-			break
-		}
+	if len(duration) > 0 {
+		ttl = duration[0]
 	}
 
-	fs := make(map[string]MemdisData)
-	fs[key] = MemdisData{
+	fs := make(map[string]KeyStoreData)
+	fs[key] = KeyStoreData{
 		Value:    value,
 		Duration: time.Now().Add(ttl),
 	}
 
-	md.storage = append(md.storage, fs)
+	ks.storage = append(ks.storage, fs)
 
 	return nil
 }
 
 // OverWriteWithKey() updates an already set value and key using the previously set key
-func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value any, duration ...time.Duration) error {
-	md.mu.Lock()
-	defer md.mu.Unlock()
+func (ks *KeyStore) OverWriteWithKey(prevkey, newKey string, value any, duration ...time.Duration) error {
+	ks.mu.Lock()
+	defer ks.mu.Unlock()
 
 	var isFound bool
-	for index, cache := range md.storage {
+	for index, cache := range ks.storage {
 		if _, ok := cache[prevkey]; ok {
 			isFound = true
-			md.storage = append(md.storage[:index], md.storage[index+1:]...)
+			ks.storage = append(ks.storage[:index], ks.storage[index+1:]...)
 		}
 	}
 
@@ -161,28 +155,25 @@ func (md *Memdis) OverWriteWithKey(prevkey, newKey string, value any, duration .
 	}
 
 	var ttl time.Duration
-	for i, v := range duration {
-		if i == 0 {
-			ttl = v
-			break
-		}
+	if len(duration) > 0 {
+		ttl = duration[0]
 	}
 
-	fs := make(map[string]MemdisData)
-	fs[newKey] = MemdisData{
+	fs := make(map[string]KeyStoreData)
+	fs[newKey] = KeyStoreData{
 		Value:    value,
 		Duration: time.Now().Add(ttl),
 	}
 
-	md.storage = append(md.storage, fs)
+	ks.storage = append(ks.storage, fs)
 
 	return nil
 }
 
 // Keys() returns all the keys in the storage
-func (md *Memdis) Keys() []string {
+func (ks *KeyStore) Keys() []string {
 	var keys []string
-	for _, cache := range md.storage {
+	for _, cache := range ks.storage {
 		for key := range cache {
 			keys = append(keys, key)
 		}
@@ -192,9 +183,9 @@ func (md *Memdis) Keys() []string {
 }
 
 // Values() returns all the values in the storage
-func (md *Memdis) Values() []any {
+func (ks *KeyStore) Values() []any {
 	var values []any
-	for _, cache := range md.storage {
+	for _, cache := range ks.storage {
 		for _, v := range cache {
 			values = append(values, v.Value)
 		}
@@ -204,8 +195,8 @@ func (md *Memdis) Values() []any {
 }
 
 // TypeOf() returns the data type of a value
-func (md *Memdis) TypeOf(key string) (string, error) {
-	for _, cache := range md.storage {
+func (ks *KeyStore) TypeOf(key string) (string, error) {
+	for _, cache := range ks.storage {
 		value, ok := cache[key]
 		if ok {
 			return reflect.TypeOf(value.Value).String(), nil
@@ -216,10 +207,10 @@ func (md *Memdis) TypeOf(key string) (string, error) {
 }
 
 // KeyValuePairs() returns an array of key value pairs of all the data in the storage
-func (md *Memdis) KeyValuePairs() []map[string]any {
+func (ks *KeyStore) KeyValuePairs() []map[string]any {
 	keyValuePairs := []map[string]any{}
 
-	for _, v := range md.storage {
+	for _, v := range ks.storage {
 		data := make(map[string]any)
 		for key, value := range v {
 			data[key] = value.Value

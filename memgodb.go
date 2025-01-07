@@ -17,8 +17,8 @@ import (
 var (
 	// MemgodbStorage storage instance
 	MemgodbStorage []any
-	// persistMemgodbData to enable persistence of Memgodb data
-	persistMemgodbData bool
+	// persistDataStoreData to enable persistence of datastore data
+	persistDataStoreData bool
 )
 
 var (
@@ -31,6 +31,7 @@ var (
 type (
 	// Collection object
 	Collection struct {
+		dataStore      DataStore
 		logger         zerolog.Logger
 		collectionName string
 	}
@@ -64,17 +65,20 @@ type (
 )
 
 // Collection defines the collection(table) name to perform an operation on it
-func (mg *Memgodb) Collection(col any) *Collection {
+func (ds *DataStore) Collection(col any) *Collection {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+
 	t := reflect.TypeOf(col)
 
 	// run validation
 	if reflect.ValueOf(col).IsZero() && col == nil {
-		mg.logger.Error().Msg("Collection cannot be empty...")
+		ds.logger.Error().Msg("Collection cannot be empty...")
 		panic("Collection cannot be empty...")
 	}
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.String {
-		mg.logger.Error().Msg("Collection must either be a [string] or an [object]")
+		ds.logger.Error().Msg("Collection must either be a [string] or an [object]")
 		panic("Collection must either be a [string] or an [object]")
 	}
 
@@ -90,8 +94,9 @@ func (mg *Memgodb) Collection(col any) *Collection {
 	}
 
 	return &Collection{
-		logger:         mg.logger,
+		logger:         ds.logger,
 		collectionName: colName,
+		dataStore:      *ds,
 	}
 }
 
@@ -103,8 +108,6 @@ func (c *Collection) Insert(obj any) error {
 		if err := c.insertOne(obj); err != nil {
 			return err
 		}
-
-		return nil
 	} else if t.Kind() == reflect.Slice {
 		arrObjs, err := c.decodeMany(obj)
 		if err != nil {
@@ -125,6 +128,9 @@ func (c *Collection) Insert(obj any) error {
 
 // insertOne is sued to insert a new record into the storage with collection name
 func (c *Collection) insertOne(obj any) error {
+	c.dataStore.mu.RLock()
+	defer c.dataStore.mu.RUnlock()
+
 	objMap, err := c.decode(obj)
 	if err != nil {
 		return err
@@ -141,6 +147,9 @@ func (c *Collection) insertOne(obj any) error {
 
 // InsertFromJsonFile adds records into the storage from a JSON file.
 func (c *Collection) InsertFromJsonFile(fileLocation string) error {
+	c.dataStore.mu.RLock()
+	defer c.dataStore.mu.RUnlock()
+
 	f, err := os.Open(fileLocation)
 	if err != nil {
 		return err
@@ -359,6 +368,9 @@ func (c *Collection) Update(filter, obj map[string]any) *Update {
 
 // One is a method available in Update(), it updates matching records from the filter, makes the necessary updates and returns an error if any.
 func (u *Update) One() error {
+	u.collection.dataStore.mu.RLock()
+	defer u.collection.dataStore.mu.RUnlock()
+
 	if u.objMaps == nil {
 		return ErrFilterParams
 	}
@@ -387,7 +399,7 @@ func (u *Update) One() error {
 }
 
 // LoadDefault is used to load data from the JSON file saved on the server using Persist() if any.
-func (mg *Memgodb) LoadDefault() error {
+func (ds *DataStore) LoadDefault() error {
 	f, err := os.Open("./memgodbstorage.json")
 	if err != nil {
 		return errors.New("error finding file")
@@ -437,12 +449,12 @@ func (mg *Memgodb) LoadDefault() error {
 // Persist is used to write data to file. All data will be saved into a JSON file on the server.
 
 // This method will make sure all your data are saved into a JSON file. A cron job runs ever minute and writes your data into a JSON file to ensure data integrity
-func (mg *Memgodb) Persist() error {
+func (ds *DataStore) Persist() error {
 	if MemgodbStorage == nil {
 		return nil
 	}
 
-	persistMemgodbData = true
+	persistDataStoreData = true
 	jsonByte, err := json.Marshal(MemgodbStorage)
 	if err != nil {
 		return err
