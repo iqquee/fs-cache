@@ -15,8 +15,8 @@ go get github.com/iqquee/fs-cache@latest
 fscache "github.com/iqquee/fs-cache"
 ```
 
-## Memdis storage
-Memdis gives you a Redis-like feature similarly as you would with a Redis database.
+## KeyStore storage
+KeyStore gives you a Redis-like feature similarly as you would with a Redis database.
 
 ### Set()
 Set() adds a new data into the in-memory storage
@@ -24,7 +24,7 @@ Set() adds a new data into the in-memory storage
 fs := fscache.New()
 
 // the third param is an optional param used to set the expiration time of the set data
-if err := fs.Memdis().Set("key1", "user1", 5*time.Minute); err != nil {
+if err := fs.KeyStore().Set("key1", "user1", 5*time.Minute); err != nil {
 	fmt.Println("error setting key1:", err)
 }
 ```
@@ -34,7 +34,7 @@ Get() retrieves a data from the in-memory storage
 ```go
 fs := fscache.New()
 
-result, err := fs.Memdis().Get("key1")
+result, err := fs.KeyStore().Get("key1")
 if err != nil {
 	fmt.Println("error getting key 1:", err)
 }
@@ -42,8 +42,8 @@ if err != nil {
 fmt.Println("key1:", result)
 ```
 
-## Memgodb storage
-Memgodb gives you a MongoDB-like feature similarly as you would with a MondoDB database.
+## DataStore storage
+DataStore gives you a MongoDB-like feature similarly as you would with a MondoDB database.
 
 ### Persist()
 Persist is used to write data to file. All data will be saved into a JSON file.
@@ -52,7 +52,7 @@ This method will make sure all your data are saved. A cronjob runs ever minute a
 ```go
 fs := fscache.New()
 
-if err := fs.Memgodb().Persist(); err != nil {
+if err := fs.DataStore().Persist(); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -73,7 +73,7 @@ var user User
 user.Name = "jane doe"
 user.Age = 20
 
-if err := fs.Memgodb().Collection(User{}).Insert(user); err != nil {
+if err := fs.DataStore().Collection(User{}).Insert(user); err != nil {
 	fmt.Println(err)
 }
 
@@ -88,7 +88,7 @@ var users = []struct {
 		Age: 20},
 }
 
-if err := fs.Memgodb().Collection("user").Insert(users); err != nil {
+if err := fs.DataStore().Collection("user").Insert(users); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -97,7 +97,7 @@ InsertFromJsonFile adds records into the storage from a JSON file.
 ```go
 fs := fscache.New()
 
-if err := fs.Memgodb().Collection("user").InsertFromJsonFile("path to JSON file"); err != nil {
+if err := fs.DataStore().Collection("user").InsertFromJsonFile("path to JSON file"); err != nil {
 	fmt.Println(err)
 }
 ```
@@ -114,7 +114,7 @@ filter := map[string]interface{}{
 	"age": 35.0,
 }
 
-result, err := fs.Memgodb().Collection(User{}).Filter(filter).First()
+result, err := fs.DataStore().Collection(User{}).Filter(filter).First()
 if err != nil {
 	fmt.Println(err)
 }
@@ -133,14 +133,14 @@ filter := map[string]interface{}{
 }
 
 // to get all records with matching filter from the storage
-matchingRecords, err := fs.Memgodb().Collection(User{}).Filter(filter).All()
+matchingRecords, err := fs.DataStore().Collection(User{}).Filter(filter).All()
 if err != nil {
 	fmt.Println(err)
 }
 fmt.Println(matchingRecords)
 
 // to get all records from the collection from the storage
-allRecords, err := fs.Memgodb().Collection(User{}).Filter(nil).All()
+allRecords, err := fs.DataStore().Collection(User{}).Filter(nil).All()
 if err != nil {
 	fmt.Println(err)
 }
