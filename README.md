@@ -2,8 +2,8 @@
 fs-cache provides a quick way to store and retrieve frequently accessed data, significantly enhancing your application performance and reducing database queries / API calls.
 
 ## Features
-- ### Memdis storage
-- ### Memgodb storage
+- ### KeyStore storage
+- ### DataStore storage
 
 ## Installation
 ```sh
