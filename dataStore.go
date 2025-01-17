@@ -161,10 +161,6 @@ func (ns *Namespace) Find(filters map[string]any, v any) error {
 		return err
 	}
 
-	if len(result) == 1 {
-		return fmt.Errorf("find() expects multiple results, but got %d. Use First() instead for single data", len(result))
-	}
-
 	if err := ns.decodeMany(result, &v); err != nil {
 		return err
 	}
