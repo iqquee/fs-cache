@@ -1,6 +1,7 @@
 package fscache
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -11,6 +12,9 @@ type (
 		dataStore *DataStore
 		namespace string
 	}
+
+	Find  struct{}
+	First struct{}
 )
 
 // Namespace creates or retrieves a namespace within the DataStore.
@@ -35,8 +39,8 @@ func (ds *DataStore) Namespace(name any, schema ...Schema) Namespace {
 	}
 
 	if t.Kind() != reflect.Struct && t.Kind() != reflect.String {
-		ds.logger.Error().Msg("Namespace must either be a [string] or an [object]")
-		panic("Error ::: Namespace must either be a [string] or an [object]")
+		ds.logger.Error().Msg("Namespace must either be a [string] or a [struct]")
+		panic("Error ::: Namespace must either be a [string] or a [struct]")
 	}
 
 	var nameSpace string
@@ -88,6 +92,7 @@ func (ns *Namespace) Create(v map[string]interface{}) error {
 		for key, val := range v {
 			if expectedType, exists := schema[key]; exists {
 				if reflect.TypeOf(val).String() != expectedType {
+					ns.dataStore.logger.Error().Msgf("Error ::: invalid type for field %s: expected %s, got %s", key, expectedType, reflect.TypeOf(val).String())
 					return fmt.Errorf("invalid type for field %s: expected %s, got %s", key, expectedType, reflect.TypeOf(val).String())
 				}
 			}
@@ -137,6 +142,106 @@ func (ns *Namespace) Query(filters map[string]interface{}) ([]map[string]interfa
 	}
 
 	return result, nil
+}
+
+// Find searches for records in the namespace that match the given filters.
+// If one result is found, an error is returned suggesting to use First() for one result.
+// Only use Find() if the expected result is an array of records.
+// The results are decoded into the provided variable.
+//
+// Parameters:
+//   - filters: A map of filter criteria to apply to the query.
+//   - v: A variable to store the decoded results.
+//
+// Returns:
+//   - error: An error if the query fails, if only one result is found, or if decoding fails.
+func (ns *Namespace) Find(filters map[string]any, v any) error {
+	result, err := ns.Query(filters)
+	if err != nil {
+		return err
+	}
+
+	if len(result) == 1 {
+		return fmt.Errorf("find() expects multiple results, but got %d. Use First() instead for single data", len(result))
+	}
+
+	if err := ns.decodeMany(result, &v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// First retrieves the first result matching the provided filters and decodes it into the provided variable.
+// If more than one result is found, an error is returned suggesting to use Find() for multiple results.
+// Only use First() if the expected result is a single object.
+// Parameters:
+//
+//	filters - a map containing the filters to apply to the query.
+//	v - a variable to decode the result into.
+//
+// Returns:
+//
+//	error - an error if the query fails, more than one result is found, or decoding fails.
+func (ns *Namespace) First(filters map[string]any, v any) error {
+	result, err := ns.Query(filters)
+	if err != nil {
+		return err
+	}
+
+	if len(result) > 1 {
+		return fmt.Errorf("find() expects one result, but got %d. Use Find() instead for multiple data", len(result))
+	}
+
+	if err := ns.decodeOne(result[0], &v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// decodeMany takes a slice of maps with string keys and values of any type,
+// marshals it into JSON, and then unmarshals it into the provided variable v.
+// It returns an error if either the marshaling or unmarshalling process fails.
+//
+// Params:
+// - params: A slice of maps where each map has string keys and values of any type.
+// - v: A pointer to a variable where the unmarshaled JSON will be stored.
+//
+// Returns:
+// - error: An error if marshaling or unmarshalling fails, otherwise nil.
+func (ns *Namespace) decodeMany(params []map[string]any, v any) error {
+	jsobByte, err := json.Marshal(&params)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(jsobByte, &v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// decodeOne decodes a map of parameters into a given value.
+//
+// Parameters:
+//   - params: A map containing the parameters to be decoded.
+//   - v: A pointer to the value where the decoded parameters will be stored.
+//
+// Returns:
+//   - An error if the encoding or decoding process fails, otherwise nil.
+func (ns *Namespace) decodeOne(params map[string]any, v any) error {
+	jsobByte, err := json.Marshal(&params)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(jsobByte, &v); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Update modifies documents in the data store that match the given filters with the provided new data.
