@@ -202,14 +202,14 @@ func (ns *Namespace) First(filters map[string]any, v any) error {
 
 // decodeMany takes a slice of maps with string keys and values of any type,
 // marshals it into JSON, and then unmarshals it into the provided variable v.
-// It returns an error if either the marshaling or unmarshaling process fails.
+// It returns an error if either the marshaling or unmarshalling process fails.
 //
 // Params:
 // - params: A slice of maps where each map has string keys and values of any type.
 // - v: A pointer to a variable where the unmarshaled JSON will be stored.
 //
 // Returns:
-// - error: An error if marshaling or unmarshaling fails, otherwise nil.
+// - error: An error if marshaling or unmarshalling fails, otherwise nil.
 func (ns *Namespace) decodeMany(params []map[string]any, v any) error {
 	jsobByte, err := json.Marshal(&params)
 	if err != nil {
