@@ -43,22 +43,10 @@ fmt.Println("key1:", result)
 ```
 
 ## DataStore storage
-DataStore gives you a MongoDB-like feature similarly as you would with a MondoDB database.
+DataStore gives you an SQL/NoSQL-like feature.
 
-### Persist()
-Persist is used to write data to file. All data will be saved into a JSON file.
-
-This method will make sure all your data are saved. A cronjob runs ever minute and writes your data into a JSON file to ensure data integrity
-```go
-fs := fscache.New()
-
-if err := fs.DataStore().Persist(); err != nil {
-	fmt.Println(err)
-}
-```
-
-### Insert()
-Insert is used to insert a new record into the storage.
+### Create()
+Create is used to insert a new record into the storage.
 ```go
 type User struct {
 	Name string `json:"name"`
@@ -68,84 +56,49 @@ type User struct {
 ```go
 fs := fscache.New()
 
-// to insert single record
 var user User
 user.Name = "jane doe"
 user.Age = 20
 
-if err := fs.DataStore().Collection(User{}).Insert(user); err != nil {
-	fmt.Println(err)
-}
-
-// to insert multiple records
-var users = []struct {
-		Name string `json:"name"`
-		Age  int    `json:"age"`
-	}{
-	{Name: "Jane doe",
-		Age: 25},
-	{Name: "Jane dice",
-		Age: 20},
-}
-
-if err := fs.DataStore().Collection("user").Insert(users); err != nil {
+if err := fs.DataStore().Namespace(User{}).Create(user); err != nil {
 	fmt.Println(err)
 }
 ```
-### InsertFromJsonFile()
-InsertFromJsonFile adds records into the storage from a JSON file.
-```go
-fs := fscache.New()
-
-if err := fs.DataStore().Collection("user").InsertFromJsonFile("path to JSON file"); err != nil {
-	fmt.Println(err)
-}
-```
-### Filter()
-Filter is used to filter records from the storage. It has two methods which are First() and All().
 
 - ### First()
-First is a method available in Filter(), it returns the first matching record from the filter.
+First is used when you expect a unique record and decodes it into the param object.
 ```go
 fs := fscache.New()
 
 // filter out record of age 35
 filter := map[string]interface{}{
-	"age": 35.0,
+	"age": 35,
 }
 
-result, err := fs.DataStore().Collection(User{}).Filter(filter).First()
-if err != nil {
+var response User
+if err := fs.DataStore().Namespace(User{}).First(filter, &response); err != nil {
 	fmt.Println(err)
 }
 
-fmt.Println(result)
+fmt.Println(response)
 ```
 
-- ### All()
-All is a method available in Filter(), it returns the all matching records from the filter.
+- ### Find()
+Find is used when you expect multiple records and decodes it into the param object.
 ```go
 fs := fscache.New()
 
-// filter out record of age 35
+// filter out records with of age 35
 filter := map[string]interface{}{
-	"age": 35.0,
+	"age": 35,
 }
 
-// to get all records with matching filter from the storage
-matchingRecords, err := fs.DataStore().Collection(User{}).Filter(filter).All()
-if err != nil {
-	fmt.Println(err)
-}
-fmt.Println(matchingRecords)
-
-// to get all records from the collection from the storage
-allRecords, err := fs.DataStore().Collection(User{}).Filter(nil).All()
-if err != nil {
+var response []User
+if err := fs.DataStore().Namespace(User{}).Find(filter, &response); err != nil {
 	fmt.Println(err)
 }
 
-fmt.Println(allRecords)
+fmt.Println(response)
 ```
 
 
