@@ -64,6 +64,11 @@ type (
 	}
 )
 
+// WARNING: please neglect this method and use the Namespace() instead.
+// The reason for that is because indexing is being added to the saved records inother to make their query faster.
+// Inother words, methods like Namespace().First() and Namespace().Find() would filter records faster than methods in
+// Collection().Filter().First() and Collection().Filter().Find() because they lack indexing
+//
 // Collection defines the collection(table) name to perform an operation on it
 func (ds *DataStore) Collection(col any) *Collection {
 	ds.mu.RLock()
