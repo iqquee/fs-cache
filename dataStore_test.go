@@ -95,6 +95,68 @@ func TestQuery(t *testing.T) {
 	assert.NotEmpty(t, res)
 }
 
+func TestFirst(t *testing.T) {
+	fs := New()
+
+	ns := fs.DataStore().Namespace("user", Schema{
+		"name": "string",
+		"age":  "int",
+	})
+
+	data1 := map[string]interface{}{
+		"Name": "Jane Doe",
+		"Age":  30,
+	}
+	_ = ns.Create(data1)
+
+	data2 := map[string]interface{}{
+		"Name": "John Doe",
+		"Age":  35,
+	}
+	_ = ns.Create(data2)
+
+	filter := map[string]interface{}{
+		"Age": 30,
+	}
+
+	var response user
+	err := ns.First(filter, &response)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "Jane Doe", response.Name)
+	assert.Equal(t, 30, response.Age)
+}
+
+func TestFind(t *testing.T) {
+	fs := New()
+
+	ns := fs.DataStore().Namespace("user", Schema{
+		"name": "string",
+		"age":  "int",
+	})
+
+	data1 := map[string]interface{}{
+		"Name": "Jane Doe",
+		"Age":  30,
+	}
+	_ = ns.Create(data1)
+
+	data2 := map[string]interface{}{
+		"Name": "John Doe",
+		"Age":  30,
+	}
+	_ = ns.Create(data2)
+
+	filter := map[string]interface{}{
+		"Age": 30,
+	}
+
+	var response []user
+	err := ns.Find(filter, &response)
+	assert.NoError(t, err)
+	assert.NotNil(t, response)
+}
+
 func TestUpdate(t *testing.T) {
 	fs := New()
 
