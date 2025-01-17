@@ -26,10 +26,10 @@ type (
 	// DataStore represents the in-memory store for documents (key-value pairs)
 	DataStore struct {
 		logger  zerolog.Logger
-		data    map[string][]map[string]interface{}         // Map to store a slice of documents per namespace
-		indexes map[string]map[string]map[interface{}][]int // Indexes for fast querying
-		schemas map[string]Schema                           // Schema for validation
-		mu      *sync.RWMutex                               // Mutex for thread safety
+		data    map[string][]map[string]any         // Map to store a slice of documents per namespace
+		indexes map[string]map[string]map[any][]int // Indexes for fast querying
+		schemas map[string]Schema                   // Schema for validation
+		mu      *sync.RWMutex                       // Mutex for thread safety
 	}
 
 	// Schema represents the structure of a document with type validation
@@ -68,8 +68,8 @@ func New() Operations {
 	ds := DataStore{
 		logger:  logger,
 		mu:      mu,
-		data:    make(map[string][]map[string]interface{}),
-		indexes: make(map[string]map[string]map[interface{}][]int),
+		data:    make(map[string][]map[string]any),
+		indexes: make(map[string]map[string]map[any][]int),
 		schemas: make(map[string]Schema),
 	}
 

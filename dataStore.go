@@ -63,7 +63,7 @@ func (ds *DataStore) Namespace(name any, schema ...Schema) Namespace {
 	}
 
 	ds.schemas[nameSpace] = schemas
-	ds.indexes[nameSpace] = make(map[string]map[interface{}][]int)
+	ds.indexes[nameSpace] = make(map[string]map[any][]int)
 
 	return Namespace{
 		dataStore: ds,
@@ -83,7 +83,7 @@ func (ds *DataStore) Namespace(name any, schema ...Schema) Namespace {
 // Returns:
 //
 //	error - An error if the schema validation fails, otherwise nil.
-func (ns *Namespace) Create(v map[string]interface{}) error {
+func (ns *Namespace) Create(v map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
@@ -103,7 +103,7 @@ func (ns *Namespace) Create(v map[string]interface{}) error {
 
 	for key, value := range v {
 		if _, exists := ns.dataStore.indexes[ns.namespace][key]; !exists {
-			ns.dataStore.indexes[ns.namespace][key] = make(map[interface{}][]int)
+			ns.dataStore.indexes[ns.namespace][key] = make(map[any][]int)
 		}
 		ns.dataStore.indexes[ns.namespace][key][value] = append(ns.dataStore.indexes[ns.namespace][key][value], len(ns.dataStore.data[ns.namespace])-1)
 	}
@@ -122,8 +122,8 @@ func (ns *Namespace) Create(v map[string]interface{}) error {
 //
 //	A slice of maps, where each map represents a document that matches the filters.
 //	An error if any occurs during the query process.
-func (ns *Namespace) Query(filters map[string]interface{}) ([]map[string]interface{}, error) {
-	var result []map[string]interface{}
+func (ns *Namespace) Query(filters map[string]any) ([]map[string]any, error) {
+	var result []map[string]any
 
 	docIndexes := make(map[int]bool)
 
@@ -146,7 +146,6 @@ func (ns *Namespace) Query(filters map[string]interface{}) ([]map[string]interfa
 
 // Find searches for records in the namespace that match the given filters.
 // If one result is found, an error is returned suggesting to use First() for one result.
-// Only use Find() if the expected result is an array of records.
 // The results are decoded into the provided variable.
 //
 // Parameters:
@@ -250,7 +249,7 @@ func (ns *Namespace) decodeOne(params map[string]any, v any) error {
 //
 // Returns:
 //   - error: An error if the query fails or any other issue occurs during the update process.
-func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]interface{}) error {
+func (ns *Namespace) Update(filters map[string]any, newData map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
@@ -282,7 +281,7 @@ func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]i
 // Returns:
 //
 //	error - an error if the query fails, otherwise nil.
-func (ns *Namespace) Delete(filters map[string]interface{}) error {
+func (ns *Namespace) Delete(filters map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
@@ -316,13 +315,13 @@ func (ns *Namespace) Delete(filters map[string]interface{}) error {
 // indices where it appears.
 func (ns *Namespace) rebuildIndexes() {
 	// Reset the namespace index
-	ns.dataStore.indexes[ns.namespace] = make(map[string]map[interface{}][]int)
+	ns.dataStore.indexes[ns.namespace] = make(map[string]map[any][]int)
 
 	// Iterate over all documents in the namespace
 	for i, doc := range ns.dataStore.data[ns.namespace] {
 		for key, value := range doc {
 			if _, exists := ns.dataStore.indexes[ns.namespace][key]; !exists {
-				ns.dataStore.indexes[ns.namespace][key] = make(map[interface{}][]int)
+				ns.dataStore.indexes[ns.namespace][key] = make(map[any][]int)
 			}
 
 			ns.dataStore.indexes[ns.namespace][key][value] = append(ns.dataStore.indexes[ns.namespace][key][value], i)
