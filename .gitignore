@@ -21,5 +21,6 @@
 go.work
 
 example/
+example/main.go
 memgodbstorage.json
 benchmark_test.go
