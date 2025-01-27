@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 type user struct {
@@ -197,7 +198,6 @@ func TestDelete(t *testing.T) {
 	}
 	err := ns.Create(user)
 	assert.NoError(t, err)
-	fmt.Println("Created data: ", user)
 
 	filter := map[string]interface{}{
 		"Age": 30,
@@ -219,4 +219,13 @@ func TestListNamespaces(t *testing.T) {
 
 	namespaces := fs.DataStore().ListNamespaces()
 	assert.NotEmpty(t, namespaces)
+}
+
+func TestConnectSQLDB(t *testing.T) {
+	fs := New()
+
+	ns := fs.DataStore().Namespace("user")
+
+	mockDB := &gorm.DB{}
+	ns.ConnectSQLDB(mockDB)
 }

@@ -101,8 +101,22 @@ if err := fs.DataStore().Namespace(User{}).Find(filter, &response); err != nil {
 fmt.Println(response)
 ```
 
+- ### Sync()
+You can use the Sync method to synchronize the records in the cache to your live sql database.
+```go
+fs := fscache.New()
 
-For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example)
+// filter out records with of age 35
+filter := map[string]interface{}{
+	"age": 35,
+}
+
+ns := fs.DataStore().Namespace(User{})
+db := gorm.Open(nil, &gorm.Config{})
+ns.ConnectSQLDB(db).Sync(1 * time.Second)
+```
+<!-- 
+For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example) -->
 
 ## Contributions
 Anyone can contribute to this library ;). So, feel free to improve on and add new features. I await your pull requests.

@@ -5,9 +5,18 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
+
+	"gorm.io/gorm"
+)
+
+const (
+	DBTypePostgres DBType = "postgres"
+	DBTypeMysql    DBType = "mysql"
 )
 
 type (
+	DBType    string
 	Namespace struct {
 		dataStore *DataStore
 		namespace string
@@ -15,6 +24,25 @@ type (
 
 	Find  struct{}
 	First struct{}
+
+	ConnectSQLDB struct {
+		DBType    DBType
+		namespace *Namespace
+		DB        *gorm.DB
+	}
+
+	SQLDBConfig struct {
+		DBType       DBType
+		IsConnString bool
+		ConnString   string
+		Address      string
+		Port         string
+		User         string
+		Database     string
+		Password     string
+	}
+
+	ConnectMongoDB struct{}
 )
 
 // Namespace creates or retrieves a namespace within the DataStore.
@@ -63,12 +91,36 @@ func (ds *DataStore) Namespace(name any, schema ...Schema) Namespace {
 	}
 
 	ds.schemas[nameSpace] = schemas
-	ds.indexes[nameSpace] = make(map[string]map[interface{}][]int)
+	ds.indexes[nameSpace] = make(map[string]map[any][]int)
 
 	return Namespace{
 		dataStore: ds,
 		namespace: nameSpace,
 	}
+}
+
+// toSnakeCase converts a given CamelCase string to snake_case.
+// It inserts an underscore before each uppercase letter (except the first one)
+// and converts all characters to lowercase.
+//
+// Parameters:
+//
+//	s - the CamelCase string to be converted.
+//
+// Returns:
+//
+//	A snake_case representation of the input string.
+func toSnakeCase(s string) string {
+	var result []rune
+	for i, r := range s {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result = append(result, '_', r)
+		} else {
+			result = append(result, r)
+		}
+	}
+
+	return strings.ToLower(string(result))
 }
 
 // Create adds a new entry to the namespace's data store. It first locks the data store
@@ -83,13 +135,18 @@ func (ds *DataStore) Namespace(name any, schema ...Schema) Namespace {
 // Returns:
 //
 //	error - An error if the schema validation fails, otherwise nil.
-func (ns *Namespace) Create(v map[string]interface{}) error {
+func (ns *Namespace) Create(v map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
+	normalized := make(map[string]any)
+	for key, val := range v {
+		normalized[toSnakeCase(key)] = val
+	}
+
 	// Schema enforcement
 	if schema, ok := ns.dataStore.schemas[ns.namespace]; ok {
-		for key, val := range v {
+		for key, val := range normalized {
 			if expectedType, exists := schema[key]; exists {
 				if reflect.TypeOf(val).String() != expectedType {
 					ns.dataStore.logger.Error().Msgf("Error ::: invalid type for field %s: expected %s, got %s", key, expectedType, reflect.TypeOf(val).String())
@@ -99,11 +156,14 @@ func (ns *Namespace) Create(v map[string]interface{}) error {
 		}
 	}
 
-	ns.dataStore.data[ns.namespace] = append(ns.dataStore.data[ns.namespace], v)
+	// Add a field of isSynced to each record inserted
+	normalized["is_synced"] = false
+	ns.dataStore.data[ns.namespace] = append(ns.dataStore.data[ns.namespace], normalized)
 
-	for key, value := range v {
+	// Update indexes
+	for key, value := range normalized {
 		if _, exists := ns.dataStore.indexes[ns.namespace][key]; !exists {
-			ns.dataStore.indexes[ns.namespace][key] = make(map[interface{}][]int)
+			ns.dataStore.indexes[ns.namespace][key] = make(map[any][]int)
 		}
 		ns.dataStore.indexes[ns.namespace][key][value] = append(ns.dataStore.indexes[ns.namespace][key][value], len(ns.dataStore.data[ns.namespace])-1)
 	}
@@ -122,13 +182,17 @@ func (ns *Namespace) Create(v map[string]interface{}) error {
 //
 //	A slice of maps, where each map represents a document that matches the filters.
 //	An error if any occurs during the query process.
-func (ns *Namespace) Query(filters map[string]interface{}) ([]map[string]interface{}, error) {
-	var result []map[string]interface{}
+func (ns *Namespace) Query(filters map[string]any) ([]map[string]any, error) {
+	var result []map[string]any
+
+	if len(filters) == 0 {
+		return ns.dataStore.data[ns.namespace], nil
+	}
 
 	docIndexes := make(map[int]bool)
 
 	for key, value := range filters {
-		if idx, exists := ns.dataStore.indexes[ns.namespace][key]; exists {
+		if idx, exists := ns.dataStore.indexes[ns.namespace][toSnakeCase(key)]; exists {
 			if docIdxs, exists := idx[value]; exists {
 				for _, idx := range docIdxs {
 					docIndexes[idx] = true
@@ -146,7 +210,6 @@ func (ns *Namespace) Query(filters map[string]interface{}) ([]map[string]interfa
 
 // Find searches for records in the namespace that match the given filters.
 // If one result is found, an error is returned suggesting to use First() for one result.
-// Only use Find() if the expected result is an array of records.
 // The results are decoded into the provided variable.
 //
 // Parameters:
@@ -250,7 +313,7 @@ func (ns *Namespace) decodeOne(params map[string]any, v any) error {
 //
 // Returns:
 //   - error: An error if the query fails or any other issue occurs during the update process.
-func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]interface{}) error {
+func (ns *Namespace) Update(filters map[string]any, newData map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
@@ -261,7 +324,7 @@ func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]i
 
 	for _, doc := range matchingDocs {
 		for key, value := range newData {
-			doc[key] = value
+			doc[toSnakeCase(key)] = value
 		}
 	}
 
@@ -271,6 +334,7 @@ func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]i
 	return nil
 }
 
+// cs.namespace.dataStore.indexes[namespace]["isSynced"][false] = append(cs.namespace.dataStore.indexes[namespace]["isSynced"][true], index)
 // Delete removes documents from the namespace's data store that match the given filters.
 // It first queries the data store to find matching documents, then removes them from the slice,
 // and finally rebuilds the indexes.
@@ -282,7 +346,7 @@ func (ns *Namespace) Update(filters map[string]interface{}, newData map[string]i
 // Returns:
 //
 //	error - an error if the query fails, otherwise nil.
-func (ns *Namespace) Delete(filters map[string]interface{}) error {
+func (ns *Namespace) Delete(filters map[string]any) error {
 	ns.dataStore.mu.Lock()
 	defer ns.dataStore.mu.Unlock()
 
@@ -316,13 +380,13 @@ func (ns *Namespace) Delete(filters map[string]interface{}) error {
 // indices where it appears.
 func (ns *Namespace) rebuildIndexes() {
 	// Reset the namespace index
-	ns.dataStore.indexes[ns.namespace] = make(map[string]map[interface{}][]int)
+	ns.dataStore.indexes[ns.namespace] = make(map[string]map[any][]int)
 
 	// Iterate over all documents in the namespace
 	for i, doc := range ns.dataStore.data[ns.namespace] {
 		for key, value := range doc {
 			if _, exists := ns.dataStore.indexes[ns.namespace][key]; !exists {
-				ns.dataStore.indexes[ns.namespace][key] = make(map[interface{}][]int)
+				ns.dataStore.indexes[ns.namespace][key] = make(map[any][]int)
 			}
 
 			ns.dataStore.indexes[ns.namespace][key][value] = append(ns.dataStore.indexes[ns.namespace][key][value], i)
@@ -333,13 +397,97 @@ func (ns *Namespace) rebuildIndexes() {
 // ListNamespaces returns a list of all namespace names present in the DataStore.
 // It acquires a read lock to ensure thread-safe access to the underlying data.
 func (ds *DataStore) ListNamespaces() []string {
-	ds.mu.RLock()
-	defer ds.mu.RUnlock()
-
 	var namespaces []string
 	for namespace := range ds.schemas {
 		namespaces = append(namespaces, namespace)
 	}
 
 	return namespaces
+}
+
+// ConnectSQLDB establishes a connection to the SQL database using the provided gorm.DB instance.
+// It returns a pointer to a ConnectSQLDB struct that contains the database connection and the namespace.
+//
+// Parameters:
+//
+//	db - A pointer to a gorm.DB instance representing the database connection.
+//
+// Returns:
+//
+//	A pointer to a ConnectSQLDB struct containing the database connection and namespace.
+func (ns *Namespace) ConnectSQLDB(db *gorm.DB) *ConnectSQLDB {
+	// if db == nil {
+	// 	return nil, fmt.Errorf("invalid database connection")
+	// }
+
+	return &ConnectSQLDB{DB: db, namespace: ns}
+}
+
+// Sync periodically synchronizes the in-memory data store with the SQL database.
+// It runs in a separate goroutine and uses a ticker to trigger the synchronization
+// process at the specified interval.
+//
+// Parameters:
+//   - interval: The duration between each synchronization attempt.
+//
+// The synchronization process involves the following steps:
+//  1. Lock the data store to ensure thread safety.
+//  2. Iterate over each namespace and its associated records.
+//  3. For each document, check if it is already synced by looking at the "is_synced" field.
+//  4. If the document is not synced, create a copy of the document excluding the "is_synced" field.
+//  5. Attempt to sync the document to the SQL database.
+//  6. If the sync is successful, mark the document as synced and log the success.
+//  7. If an error occurs during the sync, log the error and continue with the next document.
+//  8. Unlock the data store after processing all documents.
+//
+// Note: The synchronization process continues indefinitely until the program terminates.
+func (cs *ConnectSQLDB) Sync(interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cs.namespace.dataStore.mu.Lock()
+			for namespace, records := range cs.namespace.dataStore.data {
+				for index, doc := range records {
+					if isSynced, ok := doc["is_synced"].(bool); ok && isSynced {
+						continue
+					}
+
+					docCopy := make(map[string]any)
+					for key, value := range doc {
+						if key != "is_synced" {
+							docCopy[key] = value
+						}
+					}
+
+					if err := cs.DB.Table(namespace).Create(docCopy).Error; err != nil {
+						cs.namespace.dataStore.logger.Err(err).Msgf(
+							"Error syncing document at index %d in namespace %s: %v",
+							index, namespace, err,
+						)
+						// Log the error and continue with the next document
+						continue
+					}
+
+					doc["is_synced"] = true
+					cs.namespace.dataStore.data[namespace][index] = doc
+
+					cs.namespace.dataStore.logger.Info().Msgf(
+						"Synced document at index %d in namespace %s",
+						index, namespace,
+					)
+				}
+			}
+			cs.namespace.dataStore.mu.Unlock()
+		}
+	}()
+}
+
+func (ds *DataStore) ConnectMongoDB() error {
+	return nil
+}
+
+func (ds *ConnectMongoDB) Sync() error {
+	return nil
 }
