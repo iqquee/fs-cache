@@ -102,7 +102,7 @@ fmt.Println(response)
 ```
 
 - ### Sync()
-You can use the Sync method to syncronize the records in the cache to your live sql database.
+You can use the Sync method to synchronize the records in the cache to your live sql database.
 ```go
 fs := fscache.New()
 
@@ -115,9 +115,8 @@ ns := fs.DataStore().Namespace(User{})
 db := gorm.Open(nil, &gorm.Config{})
 ns.ConnectSQLDB(db).Sync(1 * time.Second)
 ```
-
-
-For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example)
+<!-- 
+For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example) -->
 
 ## Contributions
 Anyone can contribute to this library ;). So, feel free to improve on and add new features. I await your pull requests.
