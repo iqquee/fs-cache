@@ -106,11 +106,6 @@ You can use the Sync method to synchronize the records in the cache to your live
 ```go
 fs := fscache.New()
 
-// filter out records with of age 35
-filter := map[string]interface{}{
-	"age": 35,
-}
-
 ns := fs.DataStore().Namespace(User{})
 db := gorm.Open(nil, &gorm.Config{})
 ns.ConnectSQLDB(db).Sync(1 * time.Second)
