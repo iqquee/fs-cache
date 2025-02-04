@@ -7,12 +7,12 @@ fs-cache provides a quick way to store and retrieve frequently accessed data, si
 
 ## Installation
 ```sh
-go get github.com/iqquee/fs-cache@latest
+go get github.com/jiyamathias/fs-cache@latest
 ```
 
 ## Import
 ```sh
-fscache "github.com/iqquee/fs-cache"
+fscache "github.com/jiyamathias/fs-cache"
 ```
 
 ## KeyStore storage
@@ -111,7 +111,7 @@ db := gorm.Open(nil, &gorm.Config{})
 ns.ConnectSQLDB(db).Sync(1 * time.Second)
 ```
 <!-- 
-For an exhaustive documentation see the examples folder [https://github.com/iqquee/fs-cache/tree/main/example](https://github.com/iqquee/fs-cache/tree/main/example) -->
+For an exhaustive documentation see the examples folder [https://github.com/jiyamathias/fs-cache/tree/main/example](https://github.com/jiyamathias/fs-cache/tree/main/example) -->
 
 ## Contributions
 Anyone can contribute to this library ;). So, feel free to improve on and add new features. I await your pull requests.

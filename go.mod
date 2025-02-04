@@ -1,4 +1,4 @@
-module github.com/iqquee/fs-cache
+module github.com/jiyamathias/fs-cache
 
 go 1.22.1
 
