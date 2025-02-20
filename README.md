@@ -101,7 +101,7 @@ if err := fs.DataStore().Namespace(User{}).Find(filter, &response); err != nil {
 fmt.Println(response)
 ```
 
-- ### Sync()
+- ### Sync() - MySQL DB
 You can use the Sync method to synchronize the records in the cache to your live sql database.
 ```go
 fs := fscache.New()
@@ -109,6 +109,16 @@ fs := fscache.New()
 ns := fs.DataStore().Namespace(User{})
 db := gorm.Open(nil, &gorm.Config{})
 ns.ConnectSQLDB(db).Sync(1 * time.Second)
+```
+
+- ### Sync() - Mongo DB
+You can use the Sync method to synchronize the records in the cache to your live mongodb.
+```go
+fs := fscache.New()
+
+ns := fs.DataStore().Namespace(User{})
+db := &mongo.Database{} // you mongodb database connections
+ns.ConnectMongoDB(db).Sync(context.Background(), 1 * time.Second)
 ```
 <!-- 
 For an exhaustive documentation see the examples folder [https://github.com/jiyamathias/fs-cache/tree/main/example](https://github.com/jiyamathias/fs-cache/tree/main/example) -->

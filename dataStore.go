@@ -1,12 +1,14 @@
 package fscache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
@@ -26,23 +28,14 @@ type (
 	First struct{}
 
 	ConnectSQLDB struct {
-		DBType    DBType
 		namespace *Namespace
 		DB        *gorm.DB
 	}
 
-	SQLDBConfig struct {
-		DBType       DBType
-		IsConnString bool
-		ConnString   string
-		Address      string
-		Port         string
-		User         string
-		Database     string
-		Password     string
+	ConnectMongoDB struct {
+		namespace *Namespace
+		DB        *mongo.Database
 	}
-
-	ConnectMongoDB struct{}
 )
 
 // Namespace creates or retrieves a namespace within the DataStore.
@@ -410,11 +403,11 @@ func (ds *DataStore) ListNamespaces() []string {
 //
 // Parameters:
 //
-//	db - A pointer to a gorm.DB instance representing the database connection.
+//   - db: A pointer to a gorm.DB instance representing the database connection.
 //
 // Returns:
 //
-//	A pointer to a ConnectSQLDB struct containing the database connection and namespace.
+//   - A pointer to a ConnectSQLDB struct containing the database connection and namespace.
 func (ns *Namespace) ConnectSQLDB(db *gorm.DB) *ConnectSQLDB {
 	// if db == nil {
 	// 	return nil, fmt.Errorf("invalid database connection")
@@ -484,10 +477,75 @@ func (cs *ConnectSQLDB) Sync(interval time.Duration) {
 	}()
 }
 
-func (ds *DataStore) ConnectMongoDB() error {
-	return nil
+// ConnectMongoDB initializes a new ConnectMongoDB instance with the provided MongoDB database
+// and namespace.
+//
+// Parameters:
+//   - db: A pointer to a mongo.Database instance representing the MongoDB database connection.
+//   - ns: A pointer to a Namespace instance representing the namespace context.
+//
+// Returns:
+//   - A pointer to a ConnectMongoDB instance initialized with the provided database and namespace.
+func (ns *Namespace) ConnectMongoDB(db *mongo.Database) *ConnectMongoDB {
+	return &ConnectMongoDB{DB: db, namespace: ns}
 }
 
-func (ds *ConnectMongoDB) Sync() error {
-	return nil
+// Sync periodically synchronizes the in-memory data store with the MongoDB database.
+// It runs in a separate goroutine and uses a ticker to trigger the synchronization
+// process at the specified interval.
+//
+// The synchronization process involves the following steps:
+// 1. Lock the data store to ensure thread safety.
+// 2. Iterate over each namespace and its associated records in the data store.
+// 3. For each document, check if it has already been synced by examining the "is_synced" field.
+// 4. If the document is not synced, create a copy of the document excluding the "is_synced" field.
+// 5. Insert the copied document into the corresponding MongoDB collection.
+// 6. If the insertion is successful, mark the document as synced by setting the "is_synced" field to true.
+// 7. Log the result of the synchronization process.
+//
+// Parameters:
+//
+//   - ctx: The context to control the synchronization process.
+//   - interval: The duration between each synchronization attempt.
+func (cm *ConnectMongoDB) Sync(ctx context.Context, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cm.namespace.dataStore.mu.Lock()
+			for namespace, records := range cm.namespace.dataStore.data {
+				for index, doc := range records {
+					if isSynced, ok := doc["is_synced"].(bool); ok && isSynced {
+						continue
+					}
+
+					docCopy := make(map[string]any)
+					for key, value := range doc {
+						if key != "is_synced" {
+							docCopy[key] = value
+						}
+					}
+
+					if _, err := cm.DB.Collection(namespace).InsertOne(ctx, docCopy); err != nil {
+						cm.namespace.dataStore.logger.Err(err).Msgf(
+							"Error syncing document at index %d in namespace %s: %v",
+							index, namespace, err,
+						)
+						// Log the error and continue with the next document
+						continue
+					}
+
+					doc["is_synced"] = true
+					cm.namespace.dataStore.data[namespace][index] = doc
+
+					cm.namespace.dataStore.logger.Info().Msgf(
+						"Synced document at index %d in namespace %s",
+						index, namespace,
+					)
+				}
+			}
+			cm.namespace.dataStore.mu.Unlock()
+		}
+	}()
 }
