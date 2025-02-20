@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
 
@@ -228,4 +229,13 @@ func TestConnectSQLDB(t *testing.T) {
 
 	mockDB := &gorm.DB{}
 	ns.ConnectSQLDB(mockDB)
+}
+
+func TestConnectMongoDB(t *testing.T) {
+	fs := New()
+
+	ns := fs.DataStore().Namespace("user")
+
+	mockDB := &mongo.Database{}
+	ns.ConnectMongoDB(mockDB)
 }
